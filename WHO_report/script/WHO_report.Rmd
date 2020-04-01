@@ -11,7 +11,7 @@ header-includes: #allows you to add in your own Latex packages
 - \newcommand{\blandscape}{\begin{landscape}}
 - \newcommand{\elandscape}{\end{landscape}}
 ---
-I will keep this
+
 Doing further editing while waiting for Mark's feedback
 ```{r setup, include=FALSE}
 
