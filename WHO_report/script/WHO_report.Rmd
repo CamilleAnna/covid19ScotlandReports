@@ -12,8 +12,8 @@ header-includes: #allows you to add in your own Latex packages
 - \newcommand{\elandscape}{\end{landscape}}
 ---
 
-#Doing further editing while waiting for Mark's feedback
 
+This is another edit
 ```{r setup, include=FALSE}
 
 # SET UP CHUNK OPTIONS ----
