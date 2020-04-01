@@ -1,6 +1,6 @@
 ---
-title: "Africa Doubling time report"
-subtitle: "DRAFT - DATA UP TO MARCH 30th"
+title: "WHO Africa covid19 report"
+subtitle: "DRAFT"
 author: "COVID-19 Epidemic Response Unit, University of Edinburgh"
 output: word_document
 extra_dependencies: ["float"]
@@ -24,10 +24,10 @@ setwd('/Users/s1687811/Desktop/covid19/Africa_report/')
 today<- Sys.Date() -2
 
 # LOAD DATA & SOURCE USEFUL FUNCTIONS ----
-source('/Users/s1687811/Desktop/covid19/AG_briefing/Dt_sourced.R')
+source('/Users/s1687811/Documents/GitHub/covid19/script/sourced_functions_doublingTime_reports.R')
 
 
-who.tab<- read.csv('WHO_countries.txt', sep = '\t')
+who.tab<- read.csv('WHO_countries.txt', sep = '\t') # WHO list of countries
 colnames(who.tab)<- c('country', 'name_plot')
 
 who<- as.character(read.csv('WHO_countries.txt', sep = '\t')[,1])
