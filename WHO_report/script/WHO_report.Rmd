@@ -4,91 +4,25 @@ subtitle: "DRAFT"
 author: "COVID-19 Epidemic Response Unit, University of Edinburgh"
 output: word_document
 extra_dependencies: ["float"]
-header-includes: #allows you to add in your own Latex packages
-- \usepackage{float} #use the 'float' package
-- \floatplacement{figure}{H} #make every figure with caption = h
+header-includes:
+- \usepackage{float}
+- \floatplacement{figure}{H}
 - \usepackage{pdflscape}
 - \newcommand{\blandscape}{\begin{landscape}}
 - \newcommand{\elandscape}{\end{landscape}}
 ---
 
-Doing further editing while waiting for Mark's feedback
 ```{r setup, include=FALSE}
 
-# SET UP CHUNK OPTIONS ----
+# SET UP CHUNK OPTIONS ---
 knitr::opts_chunk$set(echo = FALSE)
 knitr::opts_chunk$set(warning = FALSE)
 knitr::opts_chunk$set(tidy = TRUE)
 
-# DIRECTORIES & DATE SET UP ----
-setwd('/Users/s1687811/Desktop/covid19/Africa_report/')
-today<- Sys.Date() -2
 
-# LOAD DATA & SOURCE USEFUL FUNCTIONS ----
-source('/Users/s1687811/Documents/GitHub/covid19/script/sourced_functions_doublingTime_reports.R')
-
-
-who.tab<- read.csv('WHO_countries.txt', sep = '\t') # WHO list of countries
-colnames(who.tab)<- c('country', 'name_plot')
-
-who<- as.character(read.csv('WHO_countries.txt', sep = '\t')[,1])
-pops<- read_excel('Africa_popsizes.xlsx')
-
-d<- 
-  read_excel(paste0('./', today, '/Africa_data_', today, '.xlsx'), sheet = 2) %>%
-  mutate(date = as.Date(date)) %>%
-  as.data.frame() %>%
-  select(c(date, which(colnames(.) %in% who)))
-
-who.in<- who[is.element(who, colnames(d))]
-who.out<- who[!is.element(who, colnames(d))]
-
-d.long<-
-  d %>%
-  gather('country', 'cumNumCases', 2:ncol(d))
-
-d.deaths<- 
-  read_excel(paste0('./', today, '/Africa_data_', today, '.xlsx'), sheet = 1) %>%
-  mutate(date = as.Date(date)) %>%
-  as.data.frame() %>%
-  select(c(date, which(colnames(.) %in% who)))
-
-d.deaths.long<-
-    d.deaths %>%
-  gather('country', 'cumNumDeaths', 2:ncol(d.deaths))
-
-
-d.10k.log.long<- 
-  d %>%
-  gather('country', 'cumcases', 2:ncol(d)) %>%
-  left_join(pops, by = 'country') %>%
-  mutate(cumcases_10k = cumcases * (10000/popsize)) %>%
-  na_if(0) %>%
-  mutate(cumcases_10k_log = log10(cumcases_10k)) %>%
-  select(date, country, cumcases_10k_log)
-
-d.10k.log<-
-  d.10k.log.long %>%
-  spread(country, cumcases_10k_log)
-
-
-d.deaths.10k.log.long<- 
-  d.deaths %>%
-  gather('country', 'cumdeaths', 2:ncol(d.deaths)) %>%
-  left_join(pops, by = 'country') %>%
-  mutate(cumdeaths_10k = cumdeaths * (10000/popsize)) %>%
-  na_if(0) %>%
-  mutate(cumdeaths_10k_log = log10(cumdeaths_10k)) %>%
-  select(date, country, cumdeaths_10k_log)
-
-
-d.deaths.10k.log<-
-  d.deaths.10k.log.long %>%
-  spread(country, cumdeaths_10k_log)
-
-
-palette<- brewer.pal(10, 'Paired')
-palette.f1<- c(rep('black', ncol(d) - length(palette)), palette)
+# FIGURES PARAMETERS ---
+palette<- brewer.pal(10, 'Paired') # 10 colorblind-friendly palette
+palette.top10<- c(rep('black', ncol(d) - length(palette)), palette) # 10 colors, the rest black
 
 
 
@@ -133,23 +67,26 @@ As of `r format(today, "%d/%m/%Y")` ... TBC
 # Main summary results
 
 ```{r rawCumCases, fig.height = 6, fig.width = 6, fig.align = "center", echo = FALSE}
-# Raw cumulative cases ----
-yseq = seq(0, max(d.long$cumNumCases) - (max(d.long$cumNumCases) %% 200), 200)
-xseq = seq.Date(from = as.Date("2020-03-01"), to = max(d$date), by = 7)
 
-plot('', xlim = range(xseq), ylim = range(yseq), xaxt = 'n', yaxt = 'n', xlab = '', ylab = '')
-axis(1, at = xseq, labels = format(xseq, "%d/%m"), font = 2)
-axis(2, at = yseq, font = 2)
-mtext('Cumulative number of cases', side = 2, font = 2, line = 2.2)
-mtext('Date (dd/mm)', side = 1, font = 2, line = 2.5)
+# Draw plot and axes
+plot('', xlim = range(xseq.f1), ylim = range(yseq.f1), xaxt = 'n', yaxt = 'n', xlab = '', ylab = '')
+axis(1, at = xseq.f1, labels = format(xseq.f1, date.format), font = x.font.f1, cex = x.cex.f1)
+axis(2, at = yseq.f1, font = y.font.f1, cex = y.cex.f1)
 
-abline(v = xseq, h = yseq, col = 'grey', lty = 'dotted')
+# Add axes labels
+mtext('Cumulative number of cases', side = 2, font = ylab.f.f1, line = ylab.line.f1, cex = ylab.cex.f1)
+mtext('Date (dd/mm)', side = 1, font = xlab.f.f1, line = xlab.line.f1, cex = xlab.cex.f1)
 
+# Add grid lines
+abline(v = xseq.f1, h = yseq.f1, col = 'grey', lty = 'dotted')
+
+# Get order of countries by CumCases at present to create an temp copy of d, re-ordered. Allow to color the "top10" countries only.
 tmp<- gather(tail(d,1)[-1], 'country', 'max') %>% arrange(-max)
-d.tmp<- d[,c('date', rev(tmp$country))]
+d.tmp<- d[,c('date', rev(tmp$country))] 
 
+# Loop through the data frame, add lines on by one, each with the corresponding color in palette.f1
 for(c in 2:ncol(d.tmp)){
-  lines(d.tmp[,c] ~ d.tmp$date, lwd = 2, col = palette.f1[c])
+  lines(d.tmp[,c] ~ d.tmp$date, lwd = 2, col = palette.top10[c])
 }
 
 x1 = range(xseq)[1]
