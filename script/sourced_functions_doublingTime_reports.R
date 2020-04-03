@@ -16,12 +16,11 @@
 # mytheme_45_inset
  
 
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-
+# LOADED PACKAGES ----
 library(readxl); library(ggplot2); library(dplyr); library(tidyr); library(rdrop2); library(Rmisc); library(lubridate);library("shiny"); library("rsconnect"); library(tidyverse); library(plotly);library(yarrr); library(tidyverse);library(knitr);library(RColorBrewer)
 
 
+# ANALYSIS FUNCTIONS ----
 epidemic.diff<- function(data, focal.country, vs.country){
   
   a1 = NA
@@ -63,61 +62,6 @@ epidemic.diff<- function(data, focal.country, vs.country){
   return(diff)
   
 }
-
-
-roundup <- function(x, nice=c(1,2,4,5,6,8,10)) {
-  if(length(x) != 1) stop("'x' must be of length 1")
-  10^floor(log10(x)) * nice[[which(x <= 10^floor(log10(x)) * nice)[[1]]]]
-}
-
-mytheme_45<- theme_bw()+
-  theme(legend.position="none",
-        panel.border= element_blank(),
-        axis.text.y = element_text(face="bold", colour="black", size=10),
-        axis.text.x = element_text(colour="black", face="bold", size=10, angle = 45, vjust=1, hjust=1),
-        axis.title.y = element_text(face="bold", colour="black", size=11),
-        axis.title.x = element_text(face="bold", colour="black", size=11),
-        axis.line.y = element_line(color="black", size = 0.5),
-        axis.line.x = element_line(color="black", size = 0.5),
-        plot.title = element_text(lineheight=.8, face="bold", hjust = 0.5))
-
-
-mytheme_45_inset<- theme_bw()+
-  theme(
-    legend.position = c(.05, .99),
-    legend.title = element_blank(),
-    legend.text = element_text(size = 10, face = 2),
-    legend.justification = c("right", "bottom"),
-    legend.box.just = "left",
-    legend.margin = margin(6, 6, 6, 6),
-    panel.border= element_blank(),
-    axis.text.y = element_text(face="bold", colour="black", size=10),
-    axis.text.x = element_text(colour="black", face="bold", size=10, angle = 45, vjust=1, hjust=1),
-    axis.title.y = element_text(face="bold", colour="black", size=11),
-    axis.title.x = element_text(face="bold", colour="black", size=11),
-    axis.line.y = element_line(color="black", size = 0.5),
-    axis.line.x = element_line(color="black", size = 0.5),
-    plot.title = element_text(lineheight=.8, face="bold", hjust = 0.5))
-
-
-mytheme_inset<- theme_bw()+
-  theme(
-    legend.position = c(.05, .99),
-    legend.title = element_blank(),
-    legend.text = element_text(size = 10, face = 2),
-    legend.justification = c("right", "bottom"),
-    legend.box.just = "left",
-    legend.margin = margin(6, 6, 6, 6),
-    panel.border= element_blank(),
-    axis.text.y = element_text(face="bold", colour="black", size=10),
-    axis.text.x = element_text(colour="black", face="bold", size=10, vjust=1, hjust=1),
-    axis.title.y = element_text(face="bold", colour="black", size=11),
-    axis.title.x = element_text(face="bold", colour="black", size=11),
-    axis.line.y = element_line(color="black", size = 0.5),
-    axis.line.x = element_line(color="black", size = 0.5),
-    plot.title = element_text(lineheight=.8, face="bold", hjust = 0.5))
-
-
 data.cleaner<- function(df){
   
   df$date<- as.Date(df$date); df.clean<- df
@@ -224,6 +168,63 @@ Td.lapply<- function(cumNumCases, dates, t1, t2){
   d<- data.frame(date = as.Date(dates), cumNumCases = cumNumCases)
   compute.td.m1.v2(dat = d, user.t1 = t1, user.t2 = t2)
 }
+
+
+# CONVENIENCE FUNCTIONS AND GGPLOT THEMES ----
+
+roundup <- function(x, nice=c(1,2,4,5,6,8,10)) {
+  if(length(x) != 1) stop("'x' must be of length 1")
+  10^floor(log10(x)) * nice[[which(x <= 10^floor(log10(x)) * nice)[[1]]]]
+}
+
+mytheme_45<- theme_bw()+
+  theme(legend.position="none",
+        panel.border= element_blank(),
+        axis.text.y = element_text(face="bold", colour="black", size=10),
+        axis.text.x = element_text(colour="black", face="bold", size=10, angle = 45, vjust=1, hjust=1),
+        axis.title.y = element_text(face="bold", colour="black", size=11),
+        axis.title.x = element_text(face="bold", colour="black", size=11),
+        axis.line.y = element_line(color="black", size = 0.5),
+        axis.line.x = element_line(color="black", size = 0.5),
+        plot.title = element_text(lineheight=.8, face="bold", hjust = 0.5))
+
+
+mytheme_45_inset<- theme_bw()+
+  theme(
+    legend.position = c(.05, .99),
+    legend.title = element_blank(),
+    legend.text = element_text(size = 10, face = 2),
+    legend.justification = c("right", "bottom"),
+    legend.box.just = "left",
+    legend.margin = margin(6, 6, 6, 6),
+    panel.border= element_blank(),
+    axis.text.y = element_text(face="bold", colour="black", size=10),
+    axis.text.x = element_text(colour="black", face="bold", size=10, angle = 45, vjust=1, hjust=1),
+    axis.title.y = element_text(face="bold", colour="black", size=11),
+    axis.title.x = element_text(face="bold", colour="black", size=11),
+    axis.line.y = element_line(color="black", size = 0.5),
+    axis.line.x = element_line(color="black", size = 0.5),
+    plot.title = element_text(lineheight=.8, face="bold", hjust = 0.5))
+
+
+mytheme_inset<- theme_bw()+
+  theme(
+    legend.position = c(.05, .99),
+    legend.title = element_blank(),
+    legend.text = element_text(size = 10, face = 2),
+    legend.justification = c("right", "bottom"),
+    legend.box.just = "left",
+    legend.margin = margin(6, 6, 6, 6),
+    panel.border= element_blank(),
+    axis.text.y = element_text(face="bold", colour="black", size=10),
+    axis.text.x = element_text(colour="black", face="bold", size=10, vjust=1, hjust=1),
+    axis.title.y = element_text(face="bold", colour="black", size=11),
+    axis.title.x = element_text(face="bold", colour="black", size=11),
+    axis.line.y = element_line(color="black", size = 0.5),
+    axis.line.x = element_line(color="black", size = 0.5),
+    plot.title = element_text(lineheight=.8, face="bold", hjust = 0.5))
+
+
 
 
 

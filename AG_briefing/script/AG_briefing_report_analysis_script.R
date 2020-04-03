@@ -16,7 +16,7 @@ today<- Sys.Date() - 2
 its = 1000
 set.seed(as.numeric(today))
 
-source('../script/sourced_functions_doublingTime_reports.R')
+source('/Users/s1687811/Documents/GitHub/covid19/script/sourced_functions_doublingTime_reports.R') 
 
 t2<- today
 t1<- today - 7
