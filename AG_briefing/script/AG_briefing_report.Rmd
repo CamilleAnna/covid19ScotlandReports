@@ -259,7 +259,7 @@ box()
 &nbsp;
  
  
-```{r fig3, fig.height = 6, fig.width = 12, fig.fullwidth = TRUE}
+```{r fig3, fig.height = 6, fig.width = 12, out.width= "100%"}
 
 # Assemble legend inset text directly from Td.report
 hb.names<- c(
@@ -328,14 +328,14 @@ legend("topleft",
        legend = c('Health board:', hb.names.a),
        ncol = 1,
        title.adj = 0.4,
-       y.intersp = 0.5,
+       y.intersp = 0.9,
        text.font = c(2,1,1,1),
        text.col = c('black',cols.f3a),
-       text.width = 4,
+       text.width = 6,
        cex = 0.8,
        #lwd = 2,
        #lty = 1,
-       inset=c(-0.07,-0.005))
+       inset=c(-0.03,-0.005))
 box()
 
 
@@ -391,14 +391,14 @@ legend("topleft",
        legend = c('Health board:', hb.names),
        ncol = 1,
        title.adj = 0.4,
-       y.intersp = 0.5,
+       y.intersp = 0.9,
        text.font = c(2,1,1,1),
        text.col = c('black',cols.f3a),
-       text.width = 4,
+       text.width = 6,
        cex = 0.8,
        #lwd = 2,
        #lty = 1,
-       inset=c(-0.07,-0.005))
+       inset=c(-0.03,-0.005))
 box()
 
 
@@ -500,7 +500,7 @@ hb.names[which(hb.names == "Grampian Shetland and Orkney")]<- "Grampian, Shetlan
 ytick<- seq(1, nrow(Td.report.analyses.clean.hb), 1) # Add healthboard names
 axis(side=2, at=ytick, labels = FALSE, tick = TRUE)
 text(par("usr")[1], ytick,  
-     labels = hb.names, offset = 1, pos = 2, xpd = TRUE, font = yticks.font, cex = yticks.cex)
+     labels = hb.names, offset = 1, pos = 2, xpd = TRUE, font = yticks.font, cex = 1.1)
 
 mtext('Doubling time (days)', side = 1, font = 2, line = 2.5)
 
@@ -528,6 +528,12 @@ for(c in 1:nrow(Td.report.analyses.clean.hb)){
 **Figure 5. Doubling time of cases**. Doubling times are calculated over a 7 day period up to `r format(today, "%d/%m/%Y")` Error bars indicate 95%CI.
 
 \newpage
+
+```{r}
+```
+&nbsp;
+
+**Figure 6. Pairwise epidemic progression comparison**.
 
 # Data
 
