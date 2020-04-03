@@ -105,7 +105,7 @@ legend("topleft",
        title.adj = 0.4,
        y.intersp = 1,
        text.font = c(2,1),
-       text.width = 4,
+       text.width = 7,
        inset=c(-0.05,-0.005))
 box()
 
@@ -166,7 +166,7 @@ legend("topleft",
        y.intersp = 1,
        text.font = c(2,1,1,1),
        text.col = c('black', 'black', 'red', 'dodgerblue'),
-       text.width = 4,
+       text.width = 7,
        inset=c(-0.05,-0.005))
 box()
 
@@ -239,9 +239,10 @@ legend("topleft",
        legend = legend.text,
        ncol = 1,
        #title.adj = 0.3,
-       y.intersp = 1,
+       y.intersp = 1.1,
        text.font = c(2,1,1,1),
        cex = 0.9,
+       text.width = 9,
        text.col = c('black', 'black', 'red', 'dodgerblue'),
        inset=c(-0.05,-0.005))
 box()
@@ -331,7 +332,7 @@ legend("topleft",
        y.intersp = 0.9,
        text.font = c(2,1,1,1),
        text.col = c('black',cols.f3a),
-       text.width = 6,
+       text.width = 15,
        cex = 0.8,
        #lwd = 2,
        #lty = 1,
@@ -394,7 +395,7 @@ legend("topleft",
        y.intersp = 0.9,
        text.font = c(2,1,1,1),
        text.col = c('black',cols.f3a),
-       text.width = 6,
+       text.width = 20,
        cex = 0.8,
        #lwd = 2,
        #lty = 1,
@@ -529,11 +530,36 @@ for(c in 1:nrow(Td.report.analyses.clean.hb)){
 
 \newpage
 
-```{r}
+```{r, fig.height = 3, fig.width = 5, fig.align = "center", warning = FALSE}
+
+pairwise.comp$epidemic.diff[is.na(pairwise.comp$epidemic.diff)] <- 0
+
+pairwise.comp$focal<- factor(pairwise.comp$focal, levels = c('Scotland', 'Rest of UK', 'London'))
+
+ggplot(pairwise.comp, aes(x = versus, y = focal, fill= epidemic.diff)) + 
+  geom_tile()+
+  xlab('')+ylab('')+
+  scale_fill_gradient2(low="red", high="forestgreen", midpoint = 0) +
+  geom_text(aes(label = epidemic.diff, x = versus, y = focal), size = 4, fontface = 2)+
+  scale_x_discrete(position = "top")+
+  theme_bw()+
+  theme(legend.position="none",
+        panel.border= element_rect(color = 'black', size = 0.5),
+        axis.text.y = element_text(face="bold", colour="black", size=14),
+        axis.text.x = element_text(colour="black", face="bold", size=14),
+        axis.title.y = element_text(face="bold", colour="black", size=15),
+        axis.title.x = element_text(face="bold", colour="black", size=15),
+        axis.line.y = element_line(color="black", size = 0.5),
+        axis.line.x = element_line(color="black", size = 0.5),
+        plot.title = element_text(lineheight=.8, face="bold", hjust = 0.5),
+        panel.grid.major = element_line(color = 'grey', linetype = 'dotted'))
+
 ```
 &nbsp;
 
 **Figure 6. Pairwise epidemic progression comparison**.
+
+\newpage
 
 # Data
 
