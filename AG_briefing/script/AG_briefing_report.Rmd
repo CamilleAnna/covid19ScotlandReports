@@ -3,277 +3,41 @@ title: 'Briefing for C19AG: Comparison of doubling times'
 subtitle: 'NOT FOR DISTRIBUTION'
 author: "COVID-19 Epidemic Response Unit, University of Edinburgh"
 date: "02/04/2020"
-output: word_document
+output: pdf_document
 ---
 
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = FALSE)
 
-setwd('/Users/s1687811/Desktop/covid19/AG_briefing/')
+setwd('/Users/s1687811/Documents/GitHub/covid19/AG_briefing/')
+today<- Sys.Date() - 2
 
-today<- Sys.Date() - 1
-its = 1000
-set.seed(as.numeric(today))
+# SOURCED SCRIPTS & ENVIRONMENTS
+# 1) load packages + used functions
+source('/Users/s1687811/Documents/GitHub/covid19/script/sourced_functions_doublingTime_reports.R') 
+# 2) output of analysis script --> all content to run plot commands are in there --> May be used to re-work figures in a classic R script
 
-source('Dt_sourced.R')
+load(paste0('/Users/s1687811/Documents/GitHub/covid19/AG_briefing/output/AG_briefing_analysis_output_', today, '.RData'))
 
+# GENERAL FIGURES PARAMETERS
+xlabels.font = 2
+ylabels.font = 2
+xlabels.cex = 1.3
+ylabels.cex = 1.3
 
-# LOADING DATA
-d.uk<- 
-  read_excel(paste0('./', today, '/UK_data_', today, '.xlsx'), sheet = 1) %>%
-  mutate(date = as.Date(date)) %>%
-  as.data.frame()
+ylabels.line = 2.2
+xlabels.line = 2.2
 
-pops.shb<- read_excel('popsizes_grouped.xlsx', sheet = 1) %>% as.data.frame()
-pops.uk<- read_excel('popsizes_grouped.xlsx', sheet = 2) %>% as.data.frame()
+xticks.cex = 1.3
+yticks.cex = 1.3
 
-d.cases<-
-  read_excel(paste0('./', today, '/SARS-Cov-2-Scotland_all_', today,'_reviewed.xlsx'), sheet = 4) %>%
-  rename(date = `...1`) %>%
-  mutate(date = as.Date(date)) %>%
-  as.data.frame()
-
-d.death<-
-  read_excel(paste0('./', today, '/SARS-Cov-2-Scotland_all_', today,'_reviewed.xlsx'), sheet = 1) %>%
-  mutate(Date = as.Date(Date)) %>%
-  rename(date = Date,
-         cumNumCases = Deaths_Cum) %>% # ! ambiguous var naming, because of constraint of sim function. But it is indeed cumulative number of DEATHS
-  select(date, cumNumCases) %>%
-  as.data.frame()
-
-
-Td.report<- data.frame(variable = character(), Td.obs = numeric(), ci.low = numeric(), ci.upp = numeric(), t1 = character(), t2 = character())
-
+xticks.font = 2
+yticks.font = 2
 
 ```
 
 
-```{r DEATHS}
-t2<- tail(tail(d.death$date, 8), 1)
-t1<- head(tail(d.death$date, 8), 1)
-
-t1.f1 = t1
-t2.f1 = t2
-
-# Dt & CI computation
-d.death.sim<- sim.epi(d.death, its = its, plotsim = FALSE) # Simulate poisson error
-
-d.death.sim.2<- # format data with appended simulations to feed in compute.td() function
-  d.death.sim %>%
-  select(-date, -cumNumCases) %>%
-  mutate_all(~ cumsum(.)) %>%
-  rename(cumNumCases = numNewCases) %>%
-  cbind(date = d.death.sim$date) %>%
-  select(c(ncol(.), seq(1, ncol(.)-1)))
-
-d.death.sim.2.list<- # Transform into a list to sapply compute.td.m1.v2() on each dataset
-  d.death.sim.2 %>%
-  select(-date) %>%
-  as.list()
-
-Tds.death<- sapply(d.death.sim.2.list, Td.lapply, dates = d.death.sim.2$date, t1 = t1, t2 = t2)
-
-# Observed and bootstrap distribution of Tds
-Td.death.obs<- as.numeric(Tds.death['cumNumCases'])
-Td.death.bootstrap<- as.numeric(Tds.death[-which(names(Tds.death) == 'cumNumCases')])
-Td.death.bootstrap<- Td.death.bootstrap[!is.na(Td.death.bootstrap == TRUE)] # NAs come from cases where there were still zero cases observed at t1 in a simulated dataset. Normal to happen when still very low number of cases observed. Becomes less of a problem as number of cases rise.
-
-# Get CI from distribution of Td
-ci.death.low<- round(quantile(Td.death.bootstrap, c(0.05), method = 6), 1)[[1]]
-ci.death.upp<- round(quantile(Td.death.bootstrap, c(0.95), method = 6), 1)[[1]]
-#paste0('DEATHS', ' : ', Td.death.obs, ' (', ci.death.low , ' - ', ci.death.upp , ')')
-
-
-Td.report<- rbind(Td.report, 
-                  data.frame(variable = 'Scotland death',
-                       Td.obs = Td.death.obs,
-                       ci.low = ci.death.low, ci.upp = ci.death.upp,
-                       t1 = t1, t2 = t2))
-
-```
- 
-```{r UK_DATA}
-
-regions<- colnames(d.uk)[-1]
-
-
-for(r in 1:length(regions)){
-  
-  d.clean<- # For focal uk region
-    d.uk[,c(1, which(colnames(d.uk) == regions[r]))] %>%
-    rename(cumNumCases = paste(regions[r])) %>%
-    as.data.frame()
-  
-  
-  d.clean.sim<- sim.epi(d.clean, its = its, plotsim = FALSE) # Simulate poisson error on raw cases
-  
-  d.clean.sim.norm<-
-    d.clean.sim %>%
-    select(-date, -cumNumCases) %>%
-    mutate_all(~ cumsum(.) * (10000/(pops.uk[pops.uk$region == regions[r],'popsize']))) %>%
-    rename(cumNumCases = numNewCases) %>%
-    cbind(date = d.clean.sim$date) %>%
-    select(c(ncol(.), seq(1, ncol(.)-1)))
-  
-  
-  t2<- tail(tail(d.clean.sim.norm$date, 8), 1) # t2: latest date
-  t1<- head(tail(d.clean.sim.norm$date, 8), 1) # t1: t2 - 7 available time steps
-  
-  
-  d.clean.sim.norm.list<- # Apply compute.td.m1.v2 on each dataset (via sapply)
-    d.clean.sim.norm %>%
-    select(-date) %>%
-    as.list()
-  
-  Tds<- sapply(d.clean.sim.norm.list, Td.lapply, dates = d.clean.sim.norm$date, t1 = t1, t2 = t2)
-  
-  # Observed and bootstrap distribution of Tds
-  Td.obs<- as.numeric(Tds['cumNumCases'])
-  Td.bootstrap<- as.numeric(Tds[-which(names(Tds) == 'cumNumCases')])
-  Td.bootstrap<- Td.bootstrap[!is.na(Td.bootstrap == TRUE)] # NAs come from cases where there were still zero cases observed at t1 in a simulated dataset. Normal to happen when still very low number of cases observed. Becomes less of a problem as number of cases rise.
-  
-  # Get CI from distribution of Td
-  ci.low<- round(quantile(Td.bootstrap, c(0.05), method = 6), 1)[[1]]
-  ci.upp<- round(quantile(Td.bootstrap, c(0.95), method = 6), 1)[[1]]
-  
-  #print(paste0(regions[r], ' : ', Td.obs, ' (', ci.low , ' - ', ci.upp , ')'))
-  
-  Td.report<- rbind(Td.report,
-                    data.frame(variable = paste(regions[r], 'cases'),
-                               Td.obs = Td.obs[[1]],
-                               ci.low = ci.low,
-                               ci.upp = ci.upp,
-                               t1 = t1,
-                               t2 = t2)
-  )
-  
-} 
-
-t1.f2 = t1
-t2.f2 = t2
-
-```
-
-```{r SCOTLAND_DATA}
-
-regions<- colnames(d.cases)[-1]
-
-sims.store<- vector('list',
-                    length = length(regions))
-
-for(r in 1:length(regions)){
-  
-  d<- # For focal health board. Additional step, going back to numNewCases to pass this through data.cleaner() function which applies the smoothing over the cases with negative numbers.
-    d.cases[,c(1, which(colnames(d.cases) == regions[r]))] %>%
-    rename(cumNumCases = paste(regions[r])) %>%
-    mutate(numNewCases = c(cumNumCases[1], diff(cumNumCases))) %>%
-    select(date, numNewCases)
-  
-  d.clean <- # Pass data through cleaner
-    data.cleaner(d) %>%
-    mutate(cumNumCases = cumsum(numNewCases)) %>%
-    select(date, cumNumCases)
-  
-  
-  d.clean.sim<- sim.epi(d.clean, its = its, plotsim = FALSE) # Simulate poisson error on raw cases
-  
-  d.clean.sim.norm<-
-    d.clean.sim %>%
-    select(-date, -cumNumCases) %>%
-    mutate_all(~ cumsum(.) * (10000/(pops.shb[pops.shb$Health_board == regions[r],'popsize']))) %>%
-    rename(cumNumCases = numNewCases) %>%
-    cbind(date = d.clean.sim$date) %>%
-    select(c(ncol(.), seq(1, ncol(.)-1)))
-  
-  names(sims.store)[r]<- regions[r]
-  sims.store[[r]]<- d.clean.sim.norm
-  
-  t2<- tail(tail(d.clean.sim.norm$date, 8), 1) # t2: latest date
-  t1<- head(tail(d.clean.sim.norm$date, 8), 1) # t1: t2 - 7 available time steps
-  
-  
-  d.clean.sim.norm.list<- # Apply compute.td.m1.v2 on each dataset (via sapply)
-    d.clean.sim.norm %>%
-    select(-date) %>%
-    as.list()
-  
-  Tds<- sapply(d.clean.sim.norm.list, Td.lapply, dates = d.clean.sim.norm$date, t1 = t1, t2 = t2)
-  
-  # Observed and bootstrap distribution of Tds
-  Td.obs<- as.numeric(Tds['cumNumCases'])
-  Td.bootstrap<- as.numeric(Tds[-which(names(Tds) == 'cumNumCases')])
-  Td.bootstrap<- Td.bootstrap[!is.na(Td.bootstrap == TRUE)] # NAs come from cases where there were still zero cases observed at t1 in a simulated dataset. Normal to happen when still very low number of cases observed. Becomes less of a problem as number of cases rise.
-  
-  # Get CI from distribution of Td
-  ci.low<- round(quantile(Td.bootstrap, c(0.05), method = 6), 1)[[1]]
-  ci.upp<- round(quantile(Td.bootstrap, c(0.95), method = 6), 1)[[1]]
-  
-  #print(paste0(regions[r], ' : ', Td.obs, ' (', ci.low , ' - ', ci.upp , ')'))
-  
-  Td.report<- rbind(Td.report,
-                    data.frame(variable = paste(regions[r], 'cases'),
-                               Td.obs = Td.obs[[1]],
-                               ci.low = ci.low,
-                               ci.upp = ci.upp,
-                               t1 = t1,
-                               t2 = t2)
-  )
-  
-} 
-
-cbbPalette <- c("#000000", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7", 'red', 'green', 'gold', 'cyan')
-
-
-df.fig3<-
-  d.cases %>%
-  gather('Health_board', 'cumcases', 2:ncol(d.cases)) %>%
-  left_join(pops.shb, by = 'Health_board') %>%
-  mutate(cumcases_10k = cumcases * (10000/popsize))
-
-
-t1.f3 = t1
-t2.f3 = t2
-
-```
-
-```{r DAYS_BEHIND}
-
-test<- d.uk %>%
-  gather('region', 'cumCases', 2:4) %>%
-  left_join(pops.uk, by = 'region') %>%
-  mutate(cumCases10k = cumCases * (100000/popsize)) %>%
-  select(-cumCases, -popsize) %>%
-  spread('region', 'cumCases10k')
-
-
-Scotland_vs_London<- epidemic.diff(test, 'Scotland', 'London')
-Scotland_vs_rUKxL<- epidemic.diff(test, 'Scotland', 'Rest of UK')
-
-text.Scotland_vs_London<- ifelse(Scotland_vs_London > 0, 'ahead', 'behind')
-text.Scotland_vs_rUKxL<- ifelse(Scotland_vs_rUKxL > 0, 'ahead', 'behind')
-
-```
-
-```{r NEED_FOR_TEXT}
-
-Td.report.analyses<- Td.report
-
-Td.report$Td.obs<- formatC(Td.report$Td.obs, digits = 1, format = "f")
-Td.report$ci.low<- formatC(Td.report$ci.low, digits = 1, format = "f")
-Td.report$ci.upp<- formatC(Td.report$ci.upp, digits = 1, format = "f")
-
-
-df.fig3b<-
-  d.cases %>%
-  gather('Health_board', 'cumcases', 2:ncol(d.cases)) %>%
-  left_join(pops.shb, by = 'Health_board') %>%
-  mutate(cumcases_10k = cumcases * (10000/popsize))%>%
-  filter(cumcases_10k > 0) %>%
-  select(date, Health_board,cumcases_10k) %>%
-  spread(Health_board,cumcases_10k)
-
-```
 # Key points summary
 
 We compare the size and rate of increase of the COVID-19 epidemic for Scotland, London and the rest of the UK except for London (rUKxL).  
@@ -303,28 +67,31 @@ Based on case counts per 10,000 population available as of `r format(today, "%d/
 
 ```{r fig1, fig.height = 6, fig.width = 6, fig.align = "center"}
 
-yseq = seq(0, max(d.death.sim.2$cumNumCases) - (max(d.death.sim.2$cumNumCases) %% 10), 10)
-xseq = seq.Date(from = min(d.death.sim.2$date), to = max(d.death.sim.2$date), by = 7)
+# Set up figure parameters
+yaxti.f1 = 10
+xaxti.f1 = 7
 
-inset.xmax.f1 = xseq[1] + (as.numeric(tail(xseq, 1) - head(xseq, 1)) * 0.45)
-inset.text.adjust.x = xseq[1] + as.numeric(diff(range(xseq[1], inset.xmax.f1))) * 0
-inset.text.adjust.y = tail(yseq, 2)[2] - as.numeric(diff(range(tail(yseq, 2)[1], tail(yseq, 2)[2]))) * c(0.2, 0.45)
+yseq = seq(0, round_any(max(d.death.sim.2$cumNumCases), 10, f = ceiling), yaxti.f1)
+xseq = seq.Date(from = min(d.death.sim.2$date), to = max(d.death.sim.2$date), by = xaxti.f1)
 
 
-# Draw plot and axes
+# Draw plot, add axes labels, add axes ticks
 plot(cumNumCases ~ date, data = d.death.sim.2, type = 'l', main = '  ',
      xlab = '', ylab = '', xaxt = 'n', yaxt = 'n')
-mtext('Cumulative number of deaths', side = 2, font = 2, line = 2.2)
-mtext('Date (dd/mm)', side = 1, font = 2, line = 2.5)
-axis(2, at = yseq, labels = yseq, font = 2)
-axis(1, at = xseq, labels = format(xseq, "%d/%m"), font = 2)
+
+mtext('Cumulative number of deaths', side = 2, font = ylabels.font, line = ylabels.line, cex = ylabels.cex)
+mtext('Date (dd/mm)', side = 1, font = xlabels.font, line = xlabels.line, cex = xlabels.cex)
+
+axis(2, at = yseq, labels = yseq, font = yticks.font, cex.axis = yticks.cex)
+axis(1, at = xseq, labels = format(xseq, "%d/%m"), font = xticks.font, cex.axis = xticks.cex)
+
 
 # Add shaded polygon on area over which Dt are calculated
-polygon(x = c(t1.f1, t1.f1, t2.f1, t2.f1),
-        #y = c(0, 3, 3, 0),
-        y = c(0, d.death.sim.2[d.death.sim.2$date == t2,'cumNumCases'], d.death.sim.2[d.death.sim.2$date == t2,'cumNumCases'], 0),
+polygon(x = c(t1, t2, t2, t1),
+        y = c(head(yseq, 1), head(yseq, 1), tail(yseq, 1), tail(yseq, 1)),
         border = NA,
         col = adjustcolor('lightgrey', alpha = .4))
+
 
 # Add background grids
 abline(h = yseq, v = xseq, lty = 'dotted', col = 'lightgrey')
@@ -333,18 +100,12 @@ abline(h = yseq, v = xseq, lty = 'dotted', col = 'lightgrey')
 legend("topleft",
        legend = c("Doubling time (95%CI):",
                   paste('  ', Td.death.obs, ' (',ci.death.low, '-', ci.death.upp, ')')),
-       #title = "Doubling time (95%CI):",
        col = 'black',
-       #bty = 'n',
-      # seg.len = 0.8,
-      # x.intersp = 0,
-       #text.width = 0.01,
        ncol = 1,
        title.adj = 0.4,
        y.intersp = 1,
        text.font = c(2,1),
-      # lwd = 2,
-       #lty = 1,
+       text.width = 4,
        inset=c(-0.05,-0.005))
 box()
 
@@ -352,7 +113,7 @@ box()
 lines(cumNumCases ~ date, data = d.death.sim.2, lwd = 2)
 
 ```
-**Figure 1. Epidemic curve for Scotland based on deaths over time up to `r format(today, "%d/%m/%Y")`.** Doubling time estimated over the past 7 days is 3.9 days (95%CI: 3.1-4.9 days).
+**Figure 1. Epidemic curve for Scotland based on deaths over time up to `r format(today, "%d/%m/%Y")`.** Doubling time estimated over the past 7 days is `r Td.report[1,'Td.obs']` days (95%CI: `Td.report[1,'ci.low']`-`Td.report[1,'ci.upp']` days).
 
 &nbsp;
 
@@ -366,50 +127,48 @@ df.fig2A<-
   d.uk %>%
   rename(rUKxL = `Rest of UK`)
 
-yseq = seq(0, max(df.fig2A[,2:4]) - max(df.fig2A[,2:4]) %% 2500, 2500)
-xseq = seq.Date(from = min(df.fig2A$date), to = max(df.fig2A$date), by = 7)
 
-inset.xmax.f2 = xseq[1] + (as.numeric(tail(xseq, 1) - head(xseq, 1)) * 0.6)
-inset.ymax.f2 = max(df.fig2A[,2:4])
-inset.text.adjust.x = xseq[1] + as.numeric(diff(range(xseq[1], inset.xmax.f2))) * 0
-inset.text.adjust.y<- rev(seq(tail(yseq, 2)[2]*0.90, inset.ymax.f2, length.out = 4))
+# Set up figure parameters
+yaxti.f2 = 2000
+xaxti.f2 = 7
 
+yseq = seq(0, round_any(max(df.fig2A[,2:4]), 10, f = ceiling), yaxti.f2)
+xseq = seq.Date(from = min(df.fig2A$date), to = max(df.fig2A$date), by = xaxti.f2)
 
+# Draw plot, axes labels, axes ticks, background grids
 plot(rUKxL ~ date, data = df.fig2A, type = 'l', main = '  ',
-     xlab = '', ylab = '', xaxt = 'n', yaxt = 'n', lwd = 2)
-abline(h = yseq, v = xseq, col = 'lightgrey', lty = 'dotted')
-lines(rUKxL ~ date, data = df.fig2A, lwd = 2, col = 'black')
-lines(London ~ date, data = df.fig2A, lwd = 2, col = 'red')
-lines(Scotland ~ date, data = df.fig2A, lwd = 2, col = 'dodgerblue')
+     xlab = '', ylab = '', xaxt = 'n', yaxt = 'n', lwd = 2,
+     xlim = range(xseq),
+     ylim = range(yseq))
 
-mtext('Cumulative number of cases', side = 2, font = 2, line = 2.5, cex = 1.2)
-mtext('Date (dd/mm)', side = 1, font = 2, line = 2.5, cex = 1.2)
-axis(2, at = yseq, labels = yseq, font = 2, cex.axis = 1.2)
-axis(1, at = xseq, labels = format(xseq, "%d/%m"), font = 2, cex.axis = 1.2)
+mtext('Cumulative number of cases', side = 2, font = ylabels.font, line = ylabels.line, cex = ylabels.cex)
+mtext('Date (dd/mm)', side = 1, font = xlabels.font, line = xlabels.line, cex = xlabels.cex)
+
+axis(2, at = yseq, labels = yseq, font = yticks.font, cex.axis = yticks.cex)
+axis(1, at = xseq, labels = format(xseq, "%d/%m"), font = xticks.font, cex.axis = xticks.cex)
+
+
+abline(h = yseq, v = xseq, col = 'lightgrey', lty = 'dotted')
+
+# Add lines
+lines(rUKxL ~ date, data = df.fig2A, lwd = 3, col = 'black')
+lines(London ~ date, data = df.fig2A, lwd = 3, col = 'red')
+lines(Scotland ~ date, data = df.fig2A, lwd = 3, col = 'dodgerblue')
 
 
 
 mtext('A', side = 3, font = 2, line = 0.2, adj = 0, cex = 1.5)
 
-polygon(x = c(xseq[1], xseq[1], inset.xmax.f2, inset.xmax.f2),
-        y = c(inset.text.adjust.y[4], inset.ymax.f2, inset.ymax.f2, inset.text.adjust.y[4]),
-        border = NA,
-        col = adjustcolor('lightgrey', alpha = .2))
-
-
-#inset.text.adjust.y = inset.ymax.f2 - as.numeric(diff(range(tail(yseq, 2)[1], tail(yseq, 2)[2]))) * c(0.25, 0.55, 0.85)
-
-regions.y.pos = rev(seq(inset.text.adjust.y[4]+300, inset.text.adjust.y[1]-300, length.out = 4))
-
-
-text(x = inset.text.adjust.x,
-     y = regions.y.pos,
-     lty = 2,
-     labels = c('Region/Country:', ' rUKxL', ' London', ' Scotland'),
-     col = c('black', 'black', 'red', 'dodgerblue'),
-     pos = 4,
-     font = c(2, rep(1, 11)),
-     cex = 0.8)
+legend("topleft",
+       legend = c('Region/Country:', ' rUKxL', ' London', ' Scotland'),
+       ncol = 1,
+       title.adj = 0.4,
+       y.intersp = 1,
+       text.font = c(2,1,1,1),
+       text.col = c('black', 'black', 'red', 'dodgerblue'),
+       text.width = 4,
+       inset=c(-0.05,-0.005))
+box()
 
 
 # FIG 2B ----
@@ -419,65 +178,73 @@ df.fig2B<-
   gather('region', 'cumcases', 2:4) %>%
   left_join(pops.uk, by = 'region') %>%
   mutate(cumcases_10k = cumcases * (10000/popsize)) %>%
-  select(date, region, cumcases_10k) %>%
-  spread(region, cumcases_10k) %>%
+  mutate(log10_cumcases_10k = log10(cumcases_10k)) %>%
+  select(date, region, log10_cumcases_10k) %>%
+  spread(region, log10_cumcases_10k) %>%
   rename(rUKxL = `Rest of UK`)
 
+# Set up figure parameters
+yaxti.f2b = 1
+xaxti.f2b = 7
 
-yseq = c(-1.5, -1, 0, 1, 1.5, 2)
-xseq = seq.Date(from = min(df.fig2B$date), to = max(df.fig2B$date), by = 7)
+yseq = seq(round_any(min(df.fig2B[,2:4]), 1, f = floor),
+           round_any(max(df.fig2B[,2:4]), 1, f = ceiling),
+           yaxti.f2b)
+xseq = seq.Date(from = min(df.fig2A$date), to = max(df.fig2A$date), by = xaxti.f2b)
 
-inset.xmax.f2 = xseq[1] + (as.numeric(tail(xseq, 1) - head(xseq, 1)) * 0.7)
-inset.ymax.f2 = max(df.fig2B[,2:4])
-inset.text.adjust.x = xseq[1] + as.numeric(diff(range(xseq[1], inset.xmax.f2))) * 0
-inset.text.adjust.y = c(1.82, 1.57, 1.32, 1.07)
+# Draw plot, axes labels, axes ticks, background grids
+plot(rUKxL ~ date, data = df.fig2B, type = 'l', main = '  ',
+     xlab = '', ylab = '', xaxt = 'n', yaxt = 'n', lwd = 2,
+     xlim = range(xseq),
+     ylim = range(yseq))
 
+mtext('Cumulative cases per 10k pop.', side = 2, font = ylabels.font, line = ylabels.line, cex = ylabels.cex)
+mtext('Date (dd/mm)', side = 1, font = xlabels.font, line = xlabels.line, cex = xlabels.cex)
 
-plot(log10(London) ~ date, data = df.fig2B, type = 'l', main = '  ',
-     xlab = '', ylab = '', xaxt = 'n', yaxt = 'n', lwd = 2, ylim = c(-1.5, 2))
-
-polygon(x = c(t1.f2, t1.f2, t2.f2, t2.f2),
-        y = c(-1.5, 2, 2, -1.5),
-        border = NA,
-        col = adjustcolor('lightgrey', alpha = .4))
-
-polygon(x = c(xseq[1], xseq[1], inset.xmax.f2, inset.xmax.f2),
-        y = c(1, 2, 2, 1),
-        border = NA,
-        col = adjustcolor('lightgrey', alpha = .2))
+axis(2, at = yseq, labels = 10^(yseq), font = yticks.font, cex.axis = yticks.cex)
+axis(1, at = xseq, labels = format(xseq, "%d/%m"), font = xticks.font, cex.axis = xticks.cex)
 
 abline(h = yseq, v = xseq, col = 'lightgrey', lty = 'dotted')
 
+# Add shaded polygon on area over which Dt are calculated
+polygon(x = c(t1, t2, t2, t1),
+        y = c(head(yseq, 1), head(yseq, 1), tail(yseq, 1), tail(yseq, 1)),
+        border = NA,
+        col = adjustcolor('lightgrey', alpha = .4))
 
-lines(log10(rUKxL) ~ date, data = df.fig2B, lwd = 2, col = 'black')
-lines(log10(London) ~ date, data = df.fig2B, lwd = 2, col = 'red')
-lines(log10(Scotland) ~ date, data = df.fig2B, lwd = 2, col = 'dodgerblue')
-
-mtext('Cumulative cases per 10k pop. (log10)', side = 2, font = 2, line = 2.5, cex = 1.2)
-mtext('Date (dd/mm)', side = 1, font = 2, line = 2.5, cex = 1.2)
-axis(2, at = yseq, labels = yseq, font = 2, cex.axis = 1.2)
-axis(1, at = xseq, labels = format(xseq, "%d/%m"), font = 2, cex.axis = 1.2)
+# Add lines
+lines(rUKxL ~ date, data = df.fig2B, lwd = 2, col = 'black')
+lines(London ~ date, data = df.fig2B, lwd = 2, col = 'red')
+lines(Scotland ~ date, data = df.fig2B, lwd = 2, col = 'dodgerblue')
 
 mtext('B', side = 3, font = 2, line = 0.2, adj = 0, cex = 1.5)
 
-td.rUKxL = Td.report[Td.report$variable == 'Rest of UK cases', c('Td.obs', 'ci.low', 'ci.upp')]
-td.london = Td.report[Td.report$variable == 'London cases', c('Td.obs', 'ci.low', 'ci.upp')]
-td.scotland = Td.report[Td.report$variable == 'Scotland cases', c('Td.obs', 'ci.low', 'ci.upp')]
 
-inset.td.rUKxL<- paste0(' rUKxL: ', td.rUKxL$Td.obs, ' (', td.rUKxL$ci.low , '-', td.rUKxL$ci.upp,')')
-inset.td.london<- paste0(' London: ', td.london$Td.obs, ' (', td.london$ci.low , '-', td.london$ci.upp,')')
-inset.td.scotland<- paste0(' Scotland: ', td.scotland$Td.obs, ' (', td.scotland$ci.low , '-', td.scotland$ci.upp,')')
+makeInsetText<- function(variable.inTd.report, Td.report, TextVarName){
+  
+  td = Td.report[Td.report$variable == variable.inTd.report, c('Td.obs', 'ci.low', 'ci.upp')]
+                
+  insetText.td<- paste0(TextVarName, ': ', td$Td.obs, ' (', td$ci.low , '-', td$ci.upp,')')
 
+  return(insetText.td)
+}
+Td.report$variable<- as.character(Td.report$variable)
 
+legend.text<- c('Doubling time (95%CI):',
+makeInsetText('Rest of UK cases', Td.report, 'rUKxL'),
+makeInsetText('London cases', Td.report, 'London'),
+makeInsetText('Scotland cases', Td.report, 'Scotland'))
 
-
-text(x = inset.text.adjust.x,
-     y = inset.text.adjust.y,
-     labels = c('Doubling times (95%CI):', inset.td.rUKxL, inset.td.london, inset.td.scotland),
-     col = c('black', 'black', 'red', 'dodgerblue'),
-     pos = 4,
-     font = c(2, rep(1, 11)),
-     cex = 0.8)
+legend("topleft",
+       legend = legend.text,
+       ncol = 1,
+       #title.adj = 0.3,
+       y.intersp = 1,
+       text.font = c(2,1,1,1),
+       cex = 0.9,
+       text.col = c('black', 'black', 'red', 'dodgerblue'),
+       inset=c(-0.05,-0.005))
+box()
 
 ```
 
@@ -494,70 +261,48 @@ text(x = inset.text.adjust.x,
  
 ```{r fig3, fig.height = 6, fig.width = 12, fig.fullwidth = TRUE}
 
-td.Ayrshire = Td.report[Td.report$variable == 'Ayrshire cases', c('Td.obs', 'ci.low', 'ci.upp')]
-td.Borders = Td.report[Td.report$variable == 'Borders cases', c('Td.obs', 'ci.low', 'ci.upp')]
-td.Dumfries_and_Galloway = Td.report[Td.report$variable == 'Dumfries and Galloway cases', c('Td.obs', 'ci.low', 'ci.upp')]
-td.Fife = Td.report[Td.report$variable == 'Fife cases', c('Td.obs', 'ci.low', 'ci.upp')]
-td.Forth_Valley = Td.report[Td.report$variable == 'Forth Valley cases', c('Td.obs', 'ci.low', 'ci.upp')]
-td.Grampian_Shetland_and_Orkney = Td.report[Td.report$variable == 'Grampian Shetland and Orkney cases', c('Td.obs', 'ci.low', 'ci.upp')]
-td.Greater_Glasgow_and_Clyde = Td.report[Td.report$variable == 'Greater Glasgow and Clyde cases', c('Td.obs', 'ci.low', 'ci.upp')]
-td.Highland_and_Western_Isles = Td.report[Td.report$variable == 'Highland and Western Isles cases', c('Td.obs', 'ci.low', 'ci.upp')]
-td.Lanarkshire = Td.report[Td.report$variable == 'Lanarkshire cases', c('Td.obs', 'ci.low', 'ci.upp')]
-td.Lothian = Td.report[Td.report$variable == 'Lothian cases', c('Td.obs', 'ci.low', 'ci.upp')]
-td.Tayside = Td.report[Td.report$variable == 'Tayside cases', c('Td.obs', 'ci.low', 'ci.upp')]
-
-
-
-# Used in both A and B (in A for HB names)
-inset.td.Ayrshire<- paste0(' Ayrshire: ', td.Ayrshire$Td.obs, ' (', td.Ayrshire$ci.low , '-', td.Ayrshire$ci.upp,')')
-inset.td.Borders<- paste0(' Borders: ', td.Borders$Td.obs, ' (', td.Borders$ci.low , '-', td.Borders$ci.upp,')')
-inset.td.Dumfries_and_Galloway<- paste0(' Dumfries/Galloway: ', td.Ayrshire$Td.obs, ' (', td.Ayrshire$ci.low , '-', td.Ayrshire$ci.upp,')')
-inset.td.Fife<- paste0(' Fife: ', td.Fife$Td.obs, ' (', td.Fife$ci.low , '-', td.Fife$ci.upp,')')
-inset.td.Forth_Valley<- paste0(' Forth Valley: ', td.Forth_Valley$Td.obs, ' (', td.Forth_Valley$ci.low , '-', td.Forth_Valley$ci.upp,')')
-inset.td.Grampian_Shetland_and_Orkney<- paste0(' Grampian, Shetland & Orkney: ', td.Grampian_Shetland_and_Orkney$Td.obs, ' (', td.Grampian_Shetland_and_Orkney$ci.low , '-', td.Grampian_Shetland_and_Orkney$ci.upp,')')
-inset.td.Greater_Glasgow_and_Clyde<- paste0(' Glasgow & Clyde: ', td.Greater_Glasgow_and_Clyde$Td.obs, ' (', td.Greater_Glasgow_and_Clyde$ci.low , '-', td.Greater_Glasgow_and_Clyde$ci.upp,')')
-inset.td.Highland_and_Western_Isles<- paste0(' Highland & W. Ilses: ', td.Highland_and_Western_Isles$Td.obs, ' (', td.Highland_and_Western_Isles$ci.low , '-', td.Highland_and_Western_Isles$ci.upp,')')
-inset.td.Lanarkshire<- paste0(' Lanarkshire: ', td.Lanarkshire$Td.obs, ' (', td.Lanarkshire$ci.low , '-', td.Lanarkshire$ci.upp,')')
-inset.td.Lothian<- paste0(' Lothian: ', td.Lothian$Td.obs, ' (', td.Lothian$ci.low , '-', td.Lothian$ci.upp,')')
-inset.td.Tayside<- paste0(' Tayside: ', td.Tayside$Td.obs, ' (', td.Tayside$ci.low , '-', td.Tayside$ci.upp,')')
-
+# Assemble legend inset text directly from Td.report
 hb.names<- c(
-inset.td.Grampian_Shetland_and_Orkney,
-inset.td.Highland_and_Western_Isles,
-inset.td.Dumfries_and_Galloway,
-inset.td.Greater_Glasgow_and_Clyde,
-inset.td.Lanarkshire,
-inset.td.Forth_Valley,
-inset.td.Tayside,
-inset.td.Lothian,
-inset.td.Borders,
-inset.td.Ayrshire,
-inset.td.Fife)
+makeInsetText('Grampian Shetland and Orkney cases', Td.report, 'Grampian, Shetland and Orkney'),
+makeInsetText('Highland and Western Isles cases', Td.report, 'Highland and Western Isles'),
+makeInsetText('Dumfries and Galloway cases', Td.report, 'Dumfries and Galloway'),
+makeInsetText('Greater Glasgow and Clyde cases', Td.report, 'Greater Glasgow and Clyde'),
+makeInsetText('Lanarkshire cases', Td.report, 'Lanarkshire'),
+makeInsetText('Forth Valley cases', Td.report, 'Forth Valley'),
+makeInsetText('Tayside cases', Td.report, 'Tayside'),
+makeInsetText('Lothian cases', Td.report, 'Lothian'),
+makeInsetText('Borders cases', Td.report, 'Borders'),
+makeInsetText('Ayrshire cases', Td.report, 'Ayrshire'),
+makeInsetText('Fife cases', Td.report, 'Fife'))
 
-figb.lwd = 2
 
 par(mfrow = c(1,2))
 
 
 # FIG 3A ----
 
-f3.ymax = max(d.cases[,2:ncol(d.cases)])
-yseq = seq(0, f3.ymax - f3.ymax %% 100, 100)
-xseq = seq.Date(from = min(d.cases$date), to = max(d.cases$date), by = 7)
-inset.xmax.f3 = xseq[1] + (as.numeric(tail(xseq, 1) - head(xseq, 1)) * 0.5)
-inset.ymax.f3 = f3.ymax
+# Set up figure parameters
+yaxti.f3 = 200
+xaxti.f3 = 7
+yseq = seq(0, round_any(max(d.cases[,2:ncol(d.cases)]), 10, f = ceiling), yaxti.f3)
+xseq = seq.Date(from = min(d.cases$date), to = max(d.cases$date), by = xaxti.f3)
 
+# Draw plot, axes labels, axes ticks, background grids
 plot(Ayrshire ~ date, data = d.cases, type = 'l', main = '  ',
-     xlab = '', ylab = '', xaxt = 'n', yaxt = 'n', lwd = 1,
-     ylim = c(0, f3.ymax))
+     xlab = '', ylab = '', xaxt = 'n', yaxt = 'n', lwd = 2,
+     xlim = range(xseq),
+     ylim = range(yseq))
+
+mtext('Cumulative number of cases', side = 2, font = ylabels.font, line = ylabels.line, cex = ylabels.cex)
+mtext('Date (dd/mm)', side = 1, font = xlabels.font, line = xlabels.line, cex = xlabels.cex)
+
+axis(2, at = yseq, labels = yseq, font = yticks.font, cex.axis = yticks.cex)
+axis(1, at = xseq, labels = format(xseq, "%d/%m"), font = xticks.font, cex.axis = xticks.cex)
 
 abline(h = yseq, v = xseq, col = 'lightgrey', lty = 'dotted')
 
-polygon(x = c(xseq[1], xseq[1], inset.xmax.f3, inset.xmax.f3),
-        y = c(tail(yseq, 2)[2]*0.5, inset.ymax.f3, inset.ymax.f3, tail(yseq, 2)[2]*0.5),
-        border = NA,
-        col = adjustcolor('lightgrey', alpha = .2))
-
+# Add lines
+figb.lwd = 3
 lines(Ayrshire ~ date, data = d.cases, lwd = figb.lwd, col = '#88CCEE')
 lines(Borders ~ date, data = d.cases, lwd = figb.lwd, col = '#CC6677')
 lines(`Dumfries and Galloway` ~ date, data = d.cases, lwd = figb.lwd, col = '#DDCC77')
@@ -571,92 +316,90 @@ lines(Lothian ~ date, data = d.cases, lwd = figb.lwd, col = '#661100')
 lines(Tayside ~ date, data = d.cases, lwd = figb.lwd, col = '#888888')
 
 
-mtext('Cumulative number of cases', side = 2, font = 2, line = 2.5, cex = 1.2)
-mtext('Date (dd/mm)', side = 1, font = 2, line = 2.5, cex = 1.2)
-axis(2, at = yseq, labels = yseq, font = 2, cex.axis = 1.2)
-axis(1, at = xseq, labels = format(xseq, "%d/%m"), font = 2, cex.axis = 1.2)
-
 mtext('A', side = 3, font = 2, line = 0.2, adj = 0, cex = 1.5)
 
-
-
-inset.text.adjust.x = xseq[1] + as.numeric(diff(range(xseq[1], inset.xmax.f2))) * 0
-#inset.hb.y.pos<- tail(yseq, 1) * rev(seq(0.45, 0.95, length.out = 12))
-inset.hb.y.pos.f3a<- rev(seq(310, 620, length.out = 12))
-
-
-hb.names.a<- do.call('rbind', strsplit(hb.names, ':'))[,1]
 
 cols.f3a<- c("#AA4499","#999933", "#DDCC77","#44AA99", "#882255", "#332288", "#888888",
              "#661100", "#CC6677", "#88CCEE", "#117733")
 
-text(x = inset.text.adjust.x,
-     y = inset.hb.y.pos.f3a,
-     #lty = 2,
-     labels = c('Health board:', hb.names.a),
-     col = c('black',cols.f3a),
-     pos = 4,
-     font = c(2, rep(1, 11)),
-     cex = 0.8)
+hb.names.a<- do.call('rbind', strsplit(hb.names, ':'))[,1]
+
+legend("topleft",
+       legend = c('Health board:', hb.names.a),
+       ncol = 1,
+       title.adj = 0.4,
+       y.intersp = 0.5,
+       text.font = c(2,1,1,1),
+       text.col = c('black',cols.f3a),
+       text.width = 4,
+       cex = 0.8,
+       #lwd = 2,
+       #lty = 1,
+       inset=c(-0.07,-0.005))
+box()
 
 
 # FIG 3B ----
 
-f3b.ymax = max(log10(df.fig3b[,2:ncol(df.fig3b)]), na.rm = TRUE)
-yseq = c(-2, -1, 0, 1, 2)
-xseq = seq.Date(from = min(df.fig3b$date), to = max(df.fig3b$date), by = 7)
-inset.xmax.f3 = xseq[1] + (as.numeric(tail(xseq, 1) - head(xseq, 1)) * 0.75)
-inset.ymax.f3 = f3b.ymax
+# Set up figure parameters
+yaxti.f3b = 1
+xaxti.f3b = 7
 
-plot(log10(Ayrshire) ~ date, data = df.fig3b, type = 'l', main = '  ',
-     xlab = '', ylab = '', xaxt = 'n', yaxt = 'n', lwd = 1,
-     ylim = c(-2, 1))
+df.fig3b[,2:ncol(df.fig3b)]<- log10(df.fig3b[,2:ncol(df.fig3b)])
 
-polygon(x = c(t1.f3, t1.f3, t2.f3, t2.f3),
-        y = c(-2, 1, 1, -2),
-        border = NA,
-        col = adjustcolor('lightgrey', alpha = .4))
+yseq = seq(round_any(min(df.fig3b[,2:ncol(df.fig3b)], na.rm = TRUE), 1, f = floor),
+           round_any(max(df.fig3b[,2:ncol(df.fig3b)], na.rm = TRUE), 1, f = ceiling),
+           yaxti.f3b)
+xseq = seq.Date(from = min(df.fig3b$date), to = max(df.fig3b$date), by = xaxti.f3b)
+
+# Draw plot, axes labels, axes ticks, background grids
+plot(Ayrshire ~ date, data = df.fig3b, type = 'l', main = '  ',
+     xlab = '', ylab = '', xaxt = 'n', yaxt = 'n', lwd = 2,
+     xlim = range(xseq),
+     ylim = range(yseq))
+
+mtext('Cumulative cases per 10k pop.', side = 2, font = ylabels.font, line = ylabels.line, cex = ylabels.cex)
+mtext('Date (dd/mm)', side = 1, font = xlabels.font, line = xlabels.line, cex = xlabels.cex)
+
+axis(2, at = yseq, labels = 10^(yseq), font = yticks.font, cex.axis = yticks.cex)
+axis(1, at = xseq, labels = format(xseq, "%d/%m"), font = xticks.font, cex.axis = xticks.cex)
 
 abline(h = yseq, v = xseq, col = 'lightgrey', lty = 'dotted')
 
-polygon(x = c(xseq[1], xseq[1], inset.xmax.f3, inset.xmax.f3),
-        y = c(-0.55, 1, 1, -0.55),
+# Add shaded polygon on area over which Dt are calculated
+polygon(x = c(t1, t2, t2, t1),
+        y = c(head(yseq, 1), head(yseq, 1), tail(yseq, 1), tail(yseq, 1)),
         border = NA,
-        col = adjustcolor('lightgrey', alpha = .2))
+        col = adjustcolor('lightgrey', alpha = .4))
 
-
-lines(log10(Ayrshire) ~ date, data = df.fig3b, lwd = figb.lwd, col = '#88CCEE')
-lines(log10(Borders) ~ date, data = df.fig3b, lwd = figb.lwd, col = '#CC6677')
-lines(log10(`Dumfries and Galloway`) ~ date, data = df.fig3b, lwd = figb.lwd, col = '#DDCC77')
-lines(log10(Fife) ~ date, data = df.fig3b, lwd = figb.lwd, col = '#117733')
-lines(log10(`Forth Valley`) ~ date, data = df.fig3b, lwd = figb.lwd, col = '#332288')
-lines(log10(`Grampian Shetland and Orkney`) ~ date, data = df.fig3b, lwd = figb.lwd, col = '#AA4499')
-lines(log10(`Greater Glasgow and Clyde`) ~ date, data = df.fig3b, lwd = figb.lwd, col = '#44AA99')
-lines(log10(`Highland and Western Isles`) ~ date, data = df.fig3b, lwd = figb.lwd, col = '#999933')
-lines(log10(Lanarkshire) ~ date, data = df.fig3b, lwd = figb.lwd, col = '#882255')
-lines(log10(Lothian) ~ date, data = df.fig3b, lwd = figb.lwd, col = '#661100')
-lines(log10(Tayside) ~ date, data = df.fig3b, lwd = figb.lwd, col = '#888888')
-
-mtext('Cumulative cases per 10k pop. (log10)', side = 2, font = 2, line = 2.5, cex = 1.2)
-mtext('Date (dd/mm)', side = 1, font = 2, line = 2.5, cex = 1.2)
-axis(2, at = yseq, labels = yseq, font = 2, cex.axis = 1.2)
-axis(1, at = xseq, labels = format(xseq, "%d/%m"), font = 2, cex.axis = 1.2)
 mtext('B', side = 3, font = 2, line = 0.2, adj = 0, cex = 1.5)
 
+lines(Ayrshire ~ date, data = df.fig3b, lwd = figb.lwd, col = '#88CCEE')
+lines(Borders ~ date, data = df.fig3b, lwd = figb.lwd, col = '#CC6677')
+lines(`Dumfries and Galloway` ~ date, data = df.fig3b, lwd = figb.lwd, col = '#DDCC77')
+lines(Fife ~ date, data = df.fig3b, lwd = figb.lwd, col = '#117733')
+lines(`Forth Valley` ~ date, data = df.fig3b, lwd = figb.lwd, col = '#332288')
+lines(`Grampian Shetland and Orkney` ~ date, data = df.fig3b, lwd = figb.lwd, col = '#AA4499')
+lines(`Greater Glasgow and Clyde` ~ date, data = df.fig3b, lwd = figb.lwd, col = '#44AA99')
+lines(`Highland and Western Isles` ~ date, data = df.fig3b, lwd = figb.lwd, col = '#999933')
+lines(Lanarkshire ~ date, data = df.fig3b, lwd = figb.lwd, col = '#882255')
+lines(Lothian ~ date, data = df.fig3b, lwd = figb.lwd, col = '#661100')
+lines(Tayside ~ date, data = df.fig3b, lwd = figb.lwd, col = '#888888')
 
 
-inset.hb.y.pos.f3b<- rev(seq(-0.5, 0.9, length.out = 12))
-
-
-text(x = inset.text.adjust.x,
-     y = inset.hb.y.pos.f3b,
-     #lty = 2,
-     labels = c('Doubling times (95%CI):', hb.names),
-     col = c('black',cols.f3a),
-     pos = 4,
-     font = c(2, rep(1, 11)),
-     cex = 0.8)
-
+legend("topleft",
+       legend = c('Health board:', hb.names),
+       ncol = 1,
+       title.adj = 0.4,
+       y.intersp = 0.5,
+       text.font = c(2,1,1,1),
+       text.col = c('black',cols.f3a),
+       text.width = 4,
+       cex = 0.8,
+       #lwd = 2,
+       #lty = 1,
+       inset=c(-0.07,-0.005))
+box()
 
 
 ```
@@ -668,21 +411,23 @@ text(x = inset.text.adjust.x,
 
 ```{r, fig.height = 7.5, fig.width = 10, fig.align = "center", warning = FALSE}
 
+# Setting up a list to store last row of each cumulative incidence dataframes with their simulations
 dat.hist.cumsum10k<- vector('list', length = length(regions))
 
 for(i in 1:length(sims.store)){
  
+# Fetch simulation output of a health board, add HB name to keep track, rename 'cumNumCases' (which is observed data), take last row (i.e. incidence at present)
 latest<- sims.store[[i]] %>%
   mutate(region = names(sims.store[i])) %>%
-  rename(cumNumCase_10k = cumNumCases) %>%
+  rename(cumNumCase_10k = cumNumCases) %>% 
   tail(., 1)
 
-
+# Extract the simulations from this (The V columns), and compute CIs of this  bootstrap distribution of incidence
 cumNumCases_10k.sim.last<- as.numeric(latest[,which(substr(colnames(latest), 1, 1) == 'V')])
-
 ci.low.cumNumCases_10k<- round(quantile(cumNumCases_10k.sim.last, c(0.05), method = 6), 1)[[1]]
 ci.upp.cumNumCases_10k<- round(quantile(cumNumCases_10k.sim.last, c(0.95), method = 6), 1)[[1]]
 
+# Store results
 dat.hist.cumsum10k[[i]]<-
 latest %>%
   select(date, region, cumNumCase_10k) %>%
@@ -690,13 +435,13 @@ latest %>%
          ci.upp = ci.upp.cumNumCases_10k)
 }
 
+# Collapse list in dataframe, rename Grampian for the plot, order HB names as factors ordered by descending order of cumulative incidence
 df.hist.cumsum10k<- do.call('rbind', dat.hist.cumsum10k)
-
 df.hist.cumsum10k$region[which(df.hist.cumsum10k$region == "Grampian Shetland and Orkney")]<- "Grampian, Shetland and Orkney"
-
 df.hist.cumsum10k$region<- factor(df.hist.cumsum10k$region, levels = df.hist.cumsum10k$region[rev(order(df.hist.cumsum10k$cumNumCase_10k))])
 
 
+# Plot histogram - Simple ggplot
 ggplot(df.hist.cumsum10k, aes(x = region, y = cumNumCase_10k))+
   geom_histogram(stat = 'identity', width = 0.8, color = "black", fill = 'gray45')+
   geom_errorbar(aes(ymin = ci.low, ymax = ci.upp), width = 0.20, lwd = 1)+
@@ -713,8 +458,6 @@ ggplot(df.hist.cumsum10k, aes(x = region, y = cumNumCase_10k))+
         plot.title = element_text(lineheight=.8, face="bold", hjust = 0.5),
         panel.grid.major = element_line(color = 'grey', linetype = 'dotted'))
 
-
-
 ```
 &nbsp;
 
@@ -725,55 +468,58 @@ ggplot(df.hist.cumsum10k, aes(x = region, y = cumNumCase_10k))+
 ```{r, fig.height = 7, fig.width = 9, fig.align = "center", warning = FALSE}
 
 
+# Reformat the Td report table to use as basic for plotting Dt in correct order
 Td.report.analyses.clean<- 
   Td.report.analyses %>%
   rename(`Country/Health board` = variable,
          Dt = Td.obs) %>%
   select(`Country/Health board`, Dt, ci.low, ci.upp)
 
-
 Td.report.analyses.clean.hb<- Td.report.analyses.clean[-c(1:4),] %>%
   arrange(-Dt)
 
 
+# Plot Doubling time:
+# Figure parameters settings
+xaxt.f5 = 1
+
 xseq.min<- floor(-range(Td.report.analyses.clean.hb[,2:4])[c(2)])
 xseq.max<- ceiling(-range(Td.report.analyses.clean.hb[,2:4])[c(1)])
-xseq<- seq(xseq.min, xseq.max, by = 1)
+xseq<- seq(xseq.min, xseq.max, by = xaxt.f5)
 
+# Set plot area, ad axes
 par(mar = c(4, 15, 2, 1))
 
 plot('', xlim = range(xseq), ylim = c(0, nrow(Td.report.analyses.clean.hb)+1),
      xaxt = 'n', yaxt = 'n', xlab = '', ylab = '')
+axis(1, at = xseq, labels = abs(xseq), font = xticks.font, cex.axis = xticks.cex)
 
-axis(1, at = xseq, labels = abs(xseq), font = 2, cex.axis = 1.2)
-
+# Add axes labels and ticks
 hb.names<- str_replace(as.character(Td.report.analyses.clean.hb$`Country/Health board`), ' cases', '')
-
 hb.names[which(hb.names == "Grampian Shetland and Orkney")]<- "Grampian, Shetland and Orkney"
-
-ytick<- seq(1, nrow(Td.report.analyses.clean.hb), 1)
+ytick<- seq(1, nrow(Td.report.analyses.clean.hb), 1) # Add healthboard names
 axis(side=2, at=ytick, labels = FALSE, tick = TRUE)
 text(par("usr")[1], ytick,  
-     labels = hb.names, offset = 1, pos = 2, xpd = TRUE, font = 2, cex = 1)
+     labels = hb.names, offset = 1, pos = 2, xpd = TRUE, font = yticks.font, cex = yticks.cex)
 
 mtext('Doubling time (days)', side = 1, font = 2, line = 2.5)
 
+# Add shaded polygons to highlight Dt windows
 for(x in 1:(length(xseq)-1)){
- 
 xseq.focal<- xseq[c(x, length(xseq))]
-
 polygon(x = rep(xseq.focal, each = 2),
         y = c(0, nrow(Td.report.analyses.clean.hb)+1, nrow(Td.report.analyses.clean.hb)+1, 0),
         border = 'NA',
         col = adjustcolor('firebrick', alpha = .1))
 }
 
-
+# Add the doubling times points and 95%CI
+# Looping through the Td.report to fetch each value
 for(c in 1:nrow(Td.report.analyses.clean.hb)){
-  points(x = -Td.report.analyses.clean.hb$Dt[c], y = c, pch = 16, cex = 1.3)
-  lines(y = c(c,c), x = -Td.report.analyses.clean.hb[c,c('ci.low', 'ci.upp')], lwd = 3)
-  lines(y = c(c+0.1, c-0.1), x = -rep(Td.report.analyses.clean.hb$ci.low[c], 2), lwd = 3)
-  lines(y = c(c+0.1, c-0.1), x = -rep(Td.report.analyses.clean.hb$ci.upp[c], 2), lwd = 3)
+  points(x = -Td.report.analyses.clean.hb$Dt[c], y = c, pch = 16, cex = 1.3) # Dt point
+  lines(y = c(c,c), x = -Td.report.analyses.clean.hb[c,c('ci.low', 'ci.upp')], lwd = 3) # CI horizontal bar
+  lines(y = c(c+0.1, c-0.1), x = -rep(Td.report.analyses.clean.hb$ci.low[c], 2), lwd = 3) # CI vertical bars
+  lines(y = c(c+0.1, c-0.1), x = -rep(Td.report.analyses.clean.hb$ci.upp[c], 2), lwd = 3) # CI vertical bars
 }
 
 ```

@@ -13,7 +13,7 @@
 setwd('/Users/s1687811/Documents/GitHub/covid19/AG_briefing/')
 
 today<- Sys.Date() - 2
-its = 10
+its = 1000
 set.seed(as.numeric(today))
 
 source('../script/sourced_functions_doublingTime_reports.R')
@@ -296,7 +296,7 @@ df.fig3b<-
 cbbPalette <- c("#000000", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7", 'red', 'green', 'gold', 'cyan')
 
 
-
+write.csv(Td.report.analyses, paste0('output/Td_report_', today, '_t1.', t1, '_t2.', t2, '.csv'))
 save.image(paste0('output/AG_briefing_analysis_output_', today, '.RData'))
 
 
