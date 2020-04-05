@@ -2,7 +2,7 @@
 title: 'Briefing for C19AG: Comparison of doubling times'
 subtitle: 'NOT FOR DISTRIBUTION'
 author: "COVID-19 Epidemic Response Unit, University of Edinburgh"
-date: "02/04/2020"
+date: "06/04/2020"
 output: pdf_document
 ---
 
@@ -11,7 +11,7 @@ output: pdf_document
 knitr::opts_chunk$set(echo = FALSE)
 
 setwd('/Users/s1687811/Documents/GitHub/covid19/AG_briefing/')
-today<- Sys.Date() - 2
+today<- Sys.Date() - 1
 
 # SOURCED SCRIPTS & ENVIRONMENTS
 # 1) load packages + used functions
@@ -560,6 +560,15 @@ ggplot(pairwise.comp, aes(x = versus, y = focal, fill= epidemic.diff)) +
 **Figure 6. Pairwise epidemic progression comparison**.
 
 \newpage
+
+```{r}
+
+
+```
+
+
+\newpage
+
 
 # Data
 

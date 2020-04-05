@@ -12,7 +12,7 @@
 
 setwd('/Users/s1687811/Documents/GitHub/covid19/AG_briefing/')
 
-today<- Sys.Date() - 2
+today<- Sys.Date() - 1
 its = 1000
 set.seed(as.numeric(today))
 
