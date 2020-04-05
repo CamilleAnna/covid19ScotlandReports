@@ -560,12 +560,10 @@ ggplot(pairwise.comp, aes(x = versus, y = focal, fill= epidemic.diff)) +
 **Figure 6. Pairwise epidemic progression comparison**.
 
 \newpage
-
-```{r}
-
-
+&nbsp;
+```{r TabIncidenceRaw, results = 'asis', echo = FALSE}
+kable(Td.report)
 ```
-
 
 \newpage
 
