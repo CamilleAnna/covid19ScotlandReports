@@ -1,14 +1,14 @@
-# covid19ScotlandReports
+covid19ScotlandReports
 Codes for automated covid19 Scotland &amp; UK AG briefing
 
-# ~~~~~~~~~~~~~~~~~~~#
-#      READ ME       #
-# AG BRIEFING REPORT # 
-# ~~~~~~~~~~~~~~~~~~~#
+~~~~~~~~~~~~~~~~~~~#
+     READ ME       #
+AG BRIEFING REPORT # 
+~~~~~~~~~~~~~~~~~~~#
 
-# ~~~~~~~~~~~~~~~~~~~#
-#     SCRIPTS:       #
-# ~~~~~~~~~~~~~~~~~~~#
+ ~~~~~~~~~~~~~~~~~~~#
+    SCRIPTS:       #
+~~~~~~~~~~~~~~~~~~~#
 
 1) ./covid19/AG_briefing/AG_briefing_report_analysis_script.R:
 # gets the data and runs the actual analyses (computing doubling time and doing bootstrap simulations (poisson error))
