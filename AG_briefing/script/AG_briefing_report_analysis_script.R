@@ -13,13 +13,16 @@
 setwd('/Users/s1687811/Documents/GitHub/covid19/AG_briefing/')
 
 today<- Sys.Date() - 1
-its = 1000
+its = 10
 set.seed(as.numeric(today))
 
 source('/Users/s1687811/Documents/GitHub/covid19/script/sourced_functions_doublingTime_reports.R') 
 
-t2<- today
-t1<- today - 7
+time_window<- 7
+t2.define<- today - 7
+t1.define<- t2.define - time_window
+
+
 
 # LOADING DATA ----
 
@@ -50,6 +53,11 @@ Td.report<- data.frame(variable = character(), Td.obs = numeric(), ci.low = nume
 
   
 # ANALYSIS - Deaths ----
+
+# This re-defines t1 and t2 to the closests dates as possible as those defined by the user (this is just in case there are missing days in dataset. If not missing days, this is no effect)
+
+t2<-  d.death$date[which.min(abs(d.death$date-t2.define))]
+t1<- d.death$date[which.min(abs(d.death$date-(t1.define)))]
 
 # Dt & CI computation
 # Simulate poisson error. Call function sim.epi() from the sourced R script
@@ -99,6 +107,11 @@ Td.report<- rbind(Td.report,
 # ANALYSIS - UK  ----
 # This is basically running the exact same process as for death
 # Once for each column of the UK data, using a loop over the "regions" vector, where "regions = c('London', 'Scotland', 'Rest of UK')
+
+
+t2<-  d.uk$date[which.min(abs(d.uk$date-t2.define))]
+t1<- d.uk$date[which.min(abs(d.uk$date-(t1.define)))]
+
 
 regions<- colnames(d.uk)[-1]
 
@@ -194,9 +207,11 @@ for(r in 1:length(regions)){
   sims.store[[r]]<- d.clean.sim.norm
   
   # Issue may occir of the focal t1 and t2 happen to be exactly on a day that got "smoothed out".
-  # If it's the case, either adapt time window (allow 8 days?), of if really wanted 7 days, the time window might need to be adapted for each health board, in this case, comment out the next two lines.
-  #t2<- tail(tail(d.clean.sim.norm$date, 8), 1) # t2: latest date
-  #t1<- head(tail(d.clean.sim.norm$date, 8), 1) # t1: t2 - 7 available time steps
+  # the next two lines allow to select t1 and t2 the closest to the use defined dates
+  t2<-  d.clean.sim.norm$date[which.min(abs(d.clean.sim.norm$date-t2.define))]
+  t1<- d.clean.sim.norm$date[which.min(abs(d.clean.sim.norm$date-t1.define))]
+ 
+ print(paste(r, t1, t2))
   
   
   d.clean.sim.norm.list<-
@@ -223,7 +238,6 @@ for(r in 1:length(regions)){
   )
   
 } 
-
 
 
 
@@ -298,5 +312,14 @@ cbbPalette <- c("#000000", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2"
 
 write.csv(Td.report.analyses, paste0('output/Td_report_', today, '_t1.', t1, '_t2.', t2, '.csv'))
 save.image(paste0('output/AG_briefing_analysis_output_', today, '.RData'))
+
+
+#write.csv(Td.report, paste0('output/Td_report_PREVIOUS_7_DAYS.csv'))
+
+
+
+
+
+
 
 

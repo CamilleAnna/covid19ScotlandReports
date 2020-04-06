@@ -3,7 +3,7 @@ title: 'Briefing for C19AG: Comparison of doubling times'
 subtitle: 'NOT FOR DISTRIBUTION'
 author: "COVID-19 Epidemic Response Unit, University of Edinburgh"
 date: "06/04/2020"
-output: pdf_document
+output: word_document
 ---
 
 
