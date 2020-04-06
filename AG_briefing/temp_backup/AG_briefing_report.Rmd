@@ -50,18 +50,18 @@ We compare the size and rate of increase of the COVID-19 epidemic for Scotland, 
 Based on deaths:  
 &nbsp;
  
-* The current doubling time for deaths in Scotland is `r Td.report[Td.report$variable == 'Scotland death','Td.obs']` days (95% confidence interval (CI): `r Td.report[Td.report$variable == 'Scotland death','ci.low']` - `r Td.report[Td.report$variable == 'Scotland death','ci.upp']` days) (Figure 1).  
-* This is **XXXXXX** than the doubling time for previous 7 days (`r Td.reportMINUS7[Td.reportMINUS7$variable == 'Scotland death','Td.obs']` days; 95%CI: `r Td.reportMINUS7[Td.reportMINUS7$variable == 'Scotland death','ci.low']` - `r Td.reportMINUS7[Td.reportMINUS7$variable == 'Scotland death','ci.upp']` days). 
+* The current doubling time for deaths in Scotland is `r Td.report[Td.report$variable == 'Scotland death','Td.obs']` days (95% confidence interval: `r Td.report[Td.report$variable == 'Scotland death','ci.low']` - `r Td.report[Td.report$variable == 'Scotland death','ci.upp']` days) (Figure 1).  
+* This is not significantly different from doubling time for previous 7 days (2.4 days; 95%CI: 1.6-3.7 days).  
 &nbsp;
-
+ 
 Based on case counts per 10,000 population available as of `r format(today, "%d/%m/%Y")`:  
 &nbsp;
  
 * The epidemic in Scotland is `r abs(Scotland_vs_London)` days `r text.Scotland_vs_London`  London and `r abs(Scotland_vs_rUKxL)` days `r text.Scotland_vs_rUKxL` of rUKxL (Figure 2, Figure 3).  
 * The current 7-day doubling time in Scotland is `r Td.report[Td.report$variable == 'Scotland cases','Td.obs']` days (95%CI: `r Td.report[Td.report$variable == 'Scotland cases','ci.low']` - `r Td.report[Td.report$variable == 'Scotland cases','ci.upp']` days).  
-* This is **XXXXXX** than the doubling time for previous 7 days (`r Td.reportMINUS7[Td.reportMINUS7$variable == 'Scotland cases','Td.obs']` days; 95%CI: `r Td.reportMINUS7[Td.reportMINUS7$variable == 'Scotland cases','ci.low']` - `r Td.reportMINUS7[Td.reportMINUS7$variable == 'Scotland cases','ci.upp']` days).  
-* The current doubling time in Scotland is **XXXXXX** than London  (`r Td.report[Td.report$variable == 'London cases','Td.obs']` days, 95%CI: `r Td.report[Td.report$variable == 'London cases','ci.low']` - `r Td.report[Td.report$variable == 'London cases','ci.upp']` days) and is **XXXXXX** to rUKxL (`r Td.report[Td.report$variable == 'Rest of UK cases','Td.obs']` days, 95%CI: `r Td.report[Td.report$variable == 'Rest of UK cases','ci.low']` - `r Td.report[Td.report$variable == 'Rest of UK cases','ci.upp']` days) over the same time period.  
-* Across Health Boards in Scotland there is variation in cumulative case incidence (`r formatC(round(min(tail(df.fig3b, 1)[,-1]), 1), digit = 1, format = 'f')` to `r formatC(round(max(tail(df.fig3b, 1)[,-1]), 1), digit = 1, format = 'f')` per 10,000 population, Figures 4, 5) and doubling time (`r min(Td.report[5:nrow(Td.report),'Td.obs'])` to `r max(Td.report[5:nrow(Td.report),'Td.obs'])` days, Figure 6, Table 1).  
+* This is slower than the doubling time for previous 7 days (`r Td.reportMINUS7[Td.reportMINUS7$variable == 'Scotland cases','Td.obs']` days; 95%CI: `r Td.reportMINUS7[Td.reportMINUS7$variable == 'Scotland cases','ci.low']` - `r Td.reportMINUS7[Td.reportMINUS7$variable == 'Scotland cases','ci.upp']` days).  
+* The current doubling time in Scotland is significantly faster than London  (`r Td.report[Td.report$variable == 'London cases','Td.obs']` days, 95%CI: `r Td.report[Td.report$variable == 'London cases','ci.low']` - `r Td.report[Td.report$variable == 'London cases','ci.upp']` days) and is not significantly different to rUKxL (`r Td.report[Td.report$variable == 'Rest of UK cases','Td.obs']` days, 95%CI: `r Td.report[Td.report$variable == 'Rest of UK cases','ci.low']` - `r Td.report[Td.report$variable == 'Rest of UK cases','ci.upp']` days) over the same time period.  
+* Across Health Boards in Scotland there is variation in cumulative case incidence (`r formatC(round(min(tail(df.fig3b, 1)[,-1]), 1), digit = 1, format = 'f')` to `r formatC(round(max(tail(df.fig3b, 1)[,-1]), 1), digit = 1, format = 'f')` per 10,000 population, Figures 4, 5) and doubling time (`r min(Td.report[5:nrow(Td.report),'Td.obs'])` to `r max(Td.report[5:nrow(Td.report),'Td.obs'])` days, Figure 6).  
   
 # Results
 
@@ -113,7 +113,7 @@ box()
 lines(cumNumCases ~ date, data = d.death.sim.2, lwd = 2)
 
 ```
-**Figure 1. Epidemic curve for Scotland based on deaths over time up to `r format(today, "%d/%m/%Y")`.** Doubling time estimated over the past 7 days is `r Td.report[1,'Td.obs']` days (95% confidence interval (CI): `r Td.report[1,'ci.low']`-`r Td.report[1,'ci.upp']` days).
+**Figure 1. Epidemic curve for Scotland based on deaths over time up to `r format(today, "%d/%m/%Y")`.** Doubling time estimated over the past 7 days is `r Td.report[1,'Td.obs']` days (95%CI: `r Td.report[1,'ci.low']`-`r Td.report[1,'ci.upp']` days).
 
 &nbsp;
 
@@ -250,7 +250,7 @@ box()
 
 ```
 
-**Figure 2. Comparison of epidemic curves for Scotland, London and rUKxL up to `r format(today, "%d/%m/%Y")`**. **A)** Cumulative reported cases. **B)** Cumulative cases per 10,000 population on a log10 scale. Inset shows corresponding doubling times (in days) over the past 7 days (with 95% CIs).
+**Figure 2. Comparison of epidemic curves for Scotland, London and rUKxL up to `r format(today, "%d/%m/%Y")`**. **A)** Cumulative reported cases. **B)** Cumulative cases per 10,000 population on a log10 scale. Inset shows corresponding doubling times (in days) over the past 7 days (with 95% confidence intervals).
 
 &nbsp;
  
@@ -296,7 +296,7 @@ ggplot(pairwise.comp, aes(x = versus, y = focal, fill= epidemic.diff)) +
 ```
 &nbsp;
 
-**Figure 3. Pairwise epidemic progression comparison**. The reported numbers are the numbers of days ahead (positive numbers, green) or behind (negative numbers, red) the regions in horizontal entries are relative to the regions in vertical entries.
+**Figure 3. Pairwise epidemic progression comparison**. The reported numbers are the numbers of days ahead (positive numbers, green) or behind (negative numbers, red) the regions in horizontal entries are relative to the regions in vertical entires.
 
  
 \newpage
@@ -452,7 +452,7 @@ box()
 ```
 &nbsp;
 
-**Figure 4. Comparison of epidemic curves for all Scottish Health Boards up to `r format(today, "%d/%m/%Y")`**. **A)** Cumulative reported cases. **B)** Cumulative cases per 10,000 population on log10 scale. Inset shows corresponding doubling times (in days) estimated over the past 7 days with 95% CIs.
+**Figure 4. Comparison of epidemic curves for all Scottish Health Boards up to `r format(today, "%d/%m/%Y")`**. **A)** Cumulative reported cases. **B)** Cumulative cases per 10,000 population on log10 scale. Inset shows corresponding doubling times (in days) estimated over the past 7 days with 95% confidence intervals.
 
 \newpage
 
@@ -574,7 +574,7 @@ for(c in 1:nrow(Td.report.analyses.clean.hb)){
 ```
 &nbsp;
 
-**Figure 6. Doubling time of cases**. Doubling times are calculated over a 7 day period up to `r format(today, "%d/%m/%Y")`. Error bars indicate 95% CIs.
+**Figure 6. Doubling time of cases**. Doubling times are calculated over a 7 day period up to `r format(today, "%d/%m/%Y")`. Error bars indicate 95%CI.
 
 \newpage
 
@@ -600,7 +600,7 @@ kable(Td.report.clean.for.output[,1:5])
 ```
 &nbsp;
 
-**Table 1. Summary of all doubling times and their 95% CIs reported in the above figures.**
+**Table 1. Summary of all doubling times and their 95%CI reported in the above figures.**.
 
 \newpage
 

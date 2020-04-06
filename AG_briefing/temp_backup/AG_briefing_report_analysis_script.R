@@ -12,7 +12,7 @@
 
 setwd('/Users/s1687811/Documents/GitHub/covid19/AG_briefing/')
 
-today<- Sys.Date() - 1
+today<- Sys.Date()
 its = 1000
 set.seed(as.numeric(today))
 
@@ -522,5 +522,12 @@ t1 = t1.define
 write.csv(Td.report.analyses, paste0('output/Td_report_', today, '_t1.', t1, '_t2.', t2, '.csv'))
 write.csv(Td.reportMINUS7, paste0('output/Td_report_', today, '_PREVIOUS_7_DAYS.csv'))
 save.image(paste0('output/AG_briefing_analysis_output_', today, '.RData'))
+
+
+
+
+
+
+
 
 
