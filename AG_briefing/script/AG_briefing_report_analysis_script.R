@@ -25,6 +25,7 @@ t1.define<- t2.define - time_window
 
 
 # LOADING DATA ----
+ 
 
 d.uk<- # UK data, formatting variable names to fit in rest of the script
   read_excel(paste0('./data/', today, '/UK_data_', today, '.xlsx'), sheet = 1) %>%
