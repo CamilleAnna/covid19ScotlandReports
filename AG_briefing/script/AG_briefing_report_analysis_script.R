@@ -19,7 +19,7 @@ set.seed(as.numeric(today))
 source('/Users/s1687811/Documents/GitHub/covid19/script/sourced_functions_doublingTime_reports.R') 
 
 time_window<- 7
-t2.define<- today - 7
+t2.define<- today 
 t1.define<- t2.define - time_window
 
 
@@ -211,7 +211,7 @@ for(r in 1:length(regions)){
   t2<-  d.clean.sim.norm$date[which.min(abs(d.clean.sim.norm$date-t2.define))]
   t1<- d.clean.sim.norm$date[which.min(abs(d.clean.sim.norm$date-t1.define))]
  
- print(paste(r, t1, t2))
+ #print(paste(r, t1, t2))
   
   
   d.clean.sim.norm.list<-
@@ -238,8 +238,6 @@ for(r in 1:length(regions)){
   )
   
 } 
-
-
 
 
 # EPIDEMIC PROGRESSION DIFFERENCES ----
@@ -310,11 +308,211 @@ df.fig3b<-
 cbbPalette <- c("#000000", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7", 'red', 'green', 'gold', 'cyan')
 
 
+# SAVE & WRITE ----
 write.csv(Td.report.analyses, paste0('output/Td_report_', today, '_t1.', t1, '_t2.', t2, '.csv'))
 save.image(paste0('output/AG_briefing_analysis_output_', today, '.RData'))
 
 
-#write.csv(Td.report, paste0('output/Td_report_PREVIOUS_7_DAYS.csv'))
+
+# RE-RUN ANALYSIS FOR THE PREVIOUS 7 DAYS, OUTPUT THE DOUBLING TIME TABLE ----
+t2.define<- t2.define - 7
+t1.define<- t2.define - 7
+
+
+# Dataframe which will be filled throughout this script and write as csv at the end. Collects all Td & 95%CI.
+Td.reportMINUS7<- data.frame(variable = character(), Td.obs = numeric(), ci.low = numeric(), ci.upp = numeric(), t1 = character(), t2 = character())
+
+
+# ANALYSIS - Deaths ----
+# This re-defines t1 and t2 to the closests dates as possible as those defined by the user (this is just in case there are missing days in dataset. If not missing days, this is no effect)
+
+t2<-  d.death$date[which.min(abs(d.death$date-t2.define))]
+t1<- d.death$date[which.min(abs(d.death$date-(t1.define)))]
+
+# Dt & CI computation
+# Simulate poisson error. Call function sim.epi() from the sourced R script
+# Output: original dataframe extended with numNewCases (= number of new cases instead of cumulative) + one column per simulation, with variable name being "V.". Simulations output are number of new cases.
+d.death.sim<- sim.epi(d.death, its = its, plotsim = FALSE) 
+
+
+d.death.sim.2<- # format the df correctly to feed in the compute.td() function (from sourced script)
+  d.death.sim %>%
+  select(-date, -cumNumCases) %>% # remove cumNumCases which become redundant
+  mutate_all(~ cumsum(.)) %>%     # compute cumulative incidence of all simulations (+ re-compute it from original data)
+  rename(cumNumCases = numNewCases) %>%
+  cbind(date = d.death.sim$date) %>%
+  select(c(ncol(.), seq(1, ncol(.)-1))) # put variables in the right order for compute.td() function
+
+
+d.death.sim.2.list<- # Transform into a list to sapply compute.td() on each dataset
+  d.death.sim.2 %>%
+  select(-date) %>%
+  as.list()
+
+Tds.death<- sapply(d.death.sim.2.list,
+                   Td.lapply, # Function from sourced script. Simply applies compute.td() on a list of epidemic data
+                   dates = d.death.sim.2$date,
+                   t1 = t1, t2 = t2)
+
+
+# Observed and bootstrap distribution of Tds
+Td.death.obs<- as.numeric(Tds.death['cumNumCases']) # First element of the list of Tds.deaths is the observed data
+Td.death.bootstrap<- as.numeric(Tds.death[-which(names(Tds.death) == 'cumNumCases')]) # And those are the simulated = bootstrap distribution
+Td.death.bootstrap<- Td.death.bootstrap[!is.na(Td.death.bootstrap == TRUE)] # NAs come from cases where there were still zero cases observed at t1 in a simulated dataset. Normal to happen when still very low number of cases observed. Will becomes less of a problem as number of cases rise.
+
+
+# Get CI from distribution of Td
+ci.death.low<- round(quantile(Td.death.bootstrap, c(0.05), method = 6), 1)[[1]] # choice of method based on "https://amstat.tandfonline.com/doi/full/10.1080/00031305.2015.1089789#.Xoc0yZNKjBI", see section 4.6
+ci.death.upp<- round(quantile(Td.death.bootstrap, c(0.95), method = 6), 1)[[1]]
+
+
+# Update the doubling time report dataframe with the death doubling time & 95%CI
+Td.reportMINUS7<- rbind(Td.reportMINUS7, 
+                        data.frame(variable = 'Scotland death',
+                                   Td.obs = Td.death.obs,
+                                   ci.low = ci.death.low, ci.upp = ci.death.upp,
+                                   t1 = t1, t2 = t2))
+
+
+# ANALYSIS - UK  ----
+# This is basically running the exact same process as for death
+# Once for each column of the UK data, using a loop over the "regions" vector, where "regions = c('London', 'Scotland', 'Rest of UK')
+
+
+t2<-  d.uk$date[which.min(abs(d.uk$date-t2.define))]
+t1<- d.uk$date[which.min(abs(d.uk$date-(t1.define)))]
+
+
+regions<- colnames(d.uk)[-1]
+
+
+for(r in 1:length(regions)){
+  
+  d.uk.focal<- # Select focal UK region
+    d.uk[,c(1, which(colnames(d.uk) == regions[r]))] %>%
+    rename(cumNumCases = paste(regions[r])) %>%
+    as.data.frame()
+  
+  
+  d.clean.sim<- sim.epi(d.uk.focal, its = its, plotsim = FALSE)
+  
+  
+  d.clean.sim.norm<-
+    d.clean.sim %>%
+    select(-date, -cumNumCases) %>%
+    mutate_all(~ cumsum(.) * (10000/(pops.uk[pops.uk$region == regions[r],'popsize']))) %>% # extra step here: 10k pop. normalisation
+    rename(cumNumCases = numNewCases) %>%
+    cbind(date = d.clean.sim$date) %>%
+    select(c(ncol(.), seq(1, ncol(.)-1)))
+  
+  
+  #t2<- tail(tail(d.clean.sim.norm$date, 8), 1) # t2: latest date
+  #t1<- head(tail(d.clean.sim.norm$date, 8), 1) # t1: t2 - 7 available time steps
+  
+  
+  d.clean.sim.norm.list<-
+    d.clean.sim.norm %>%
+    select(-date) %>%
+    as.list()
+  
+  Tds<- sapply(d.clean.sim.norm.list, Td.lapply, dates = d.clean.sim.norm$date, t1 = t1, t2 = t2)
+  
+  
+  Td.obs<- as.numeric(Tds['cumNumCases'])
+  Td.bootstrap<- as.numeric(Tds[-which(names(Tds) == 'cumNumCases')])
+  Td.bootstrap<- Td.bootstrap[!is.na(Td.bootstrap == TRUE)] 
+  
+  
+  ci.low<- round(quantile(Td.bootstrap, c(0.05), method = 6), 1)[[1]]
+  ci.upp<- round(quantile(Td.bootstrap, c(0.95), method = 6), 1)[[1]]
+  
+  
+  Td.reportMINUS7<- rbind(Td.reportMINUS7,
+                          data.frame(variable = paste(regions[r], 'cases'),
+                                     Td.obs = Td.obs[[1]],
+                                     ci.low = ci.low,
+                                     ci.upp = ci.upp,
+                                     t1 = t1,
+                                     t2 = t2)
+  )
+  
+} 
+
+# ANALYSIS - Health boards ----
+# Exactly as for the UK data, but this time looping over the Scottish "regions", a.k.a. the Health Boards
+
+regions<- colnames(d.cases)[-1] 
+
+# Extra step here: We store the output of each simulations, in order to compute the cumulative confidence interval for the histogram plot. Declare a list with as many items as there is are health board, and will keep the dataframes with appended simulations in each element of the list.
+sims.store<- vector('list',
+                    length = length(regions)) 
+
+
+for(r in 1:length(regions)){
+  
+  d<- # Additional step: Scottish data have the issue of negative numbers. So run it through data.cleaner() function, which detects those points and smoothe over it. Wrote that function as taking as argument the 'numNewCases', so transmorfing data back to that [...]
+    d.cases[,c(1, which(colnames(d.cases) == regions[r]))] %>%
+    rename(cumNumCases = paste(regions[r])) %>%
+    mutate(numNewCases = c(cumNumCases[1], diff(cumNumCases))) %>%
+    select(date, numNewCases)
+  
+  d.clean <- # [...] then pass data through cleaner [...]
+    data.cleaner(d) %>%
+    mutate(cumNumCases = cumsum(numNewCases)) %>%  # [...] and land back on our feet with the cumulative cases, but smoothed.
+    select(date, cumNumCases)
+  
+  
+  d.clean.sim<- sim.epi(d.clean, its = its, plotsim = FALSE)
+  
+  d.clean.sim.norm<-
+    d.clean.sim %>%
+    select(-date, -cumNumCases) %>%
+    mutate_all(~ cumsum(.) * (10000/(pops.shb[pops.shb$Health_board == regions[r],'popsize']))) %>%
+    rename(cumNumCases = numNewCases) %>%
+    cbind(date = d.clean.sim$date) %>%
+    select(c(ncol(.), seq(1, ncol(.)-1)))
+  
+  # Store simulations in the list
+  names(sims.store)[r]<- regions[r]
+  sims.store[[r]]<- d.clean.sim.norm
+  
+  # Issue may occir of the focal t1 and t2 happen to be exactly on a day that got "smoothed out".
+  # the next two lines allow to select t1 and t2 the closest to the use defined dates
+  t2<-  d.clean.sim.norm$date[which.min(abs(d.clean.sim.norm$date-t2.define))]
+  t1<- d.clean.sim.norm$date[which.min(abs(d.clean.sim.norm$date-t1.define))]
+  
+  #print(paste(r, t1, t2))
+  
+  
+  d.clean.sim.norm.list<-
+    d.clean.sim.norm %>%
+    select(-date) %>%
+    as.list()
+  
+  Tds<- sapply(d.clean.sim.norm.list, Td.lapply, dates = d.clean.sim.norm$date, t1 = t1, t2 = t2)
+  
+  Td.obs<- as.numeric(Tds['cumNumCases'])
+  Td.bootstrap<- as.numeric(Tds[-which(names(Tds) == 'cumNumCases')])
+  Td.bootstrap<- Td.bootstrap[!is.na(Td.bootstrap == TRUE)] 
+  
+  ci.low<- round(quantile(Td.bootstrap, c(0.05), method = 6), 1)[[1]]
+  ci.upp<- round(quantile(Td.bootstrap, c(0.95), method = 6), 1)[[1]]
+  
+  Td.reportMINUS7<- rbind(Td.reportMINUS7,
+                          data.frame(variable = paste(regions[r], 'cases'),
+                                     Td.obs = Td.obs[[1]],
+                                     ci.low = ci.low,
+                                     ci.upp = ci.upp,
+                                     t1 = t1,
+                                     t2 = t2)
+  )
+  
+} 
+
+
+write.csv(Td.reportMINUS7, paste0('output/Td_report_', today, '_PREVIOUS_7_DAYS.csv'))
+
+
 
 
 
