@@ -12,14 +12,14 @@
 
 setwd('/Users/s1687811/Documents/GitHub/covid19/AG_briefing/')
 
-today<- Sys.Date() - 1
-its = 10
+today<- Sys.Date()
+its = 1000
 set.seed(as.numeric(today))
 
 source('/Users/s1687811/Documents/GitHub/covid19/script/sourced_functions_doublingTime_reports.R') 
 
 time_window<- 7
-t2.define<- today 
+t2.define<- today - 1
 t1.define<- t2.define - time_window
 
 
@@ -308,11 +308,6 @@ df.fig3b<-
 cbbPalette <- c("#000000", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7", 'red', 'green', 'gold', 'cyan')
 
 
-# SAVE & WRITE ----
-write.csv(Td.report.analyses, paste0('output/Td_report_', today, '_t1.', t1, '_t2.', t2, '.csv'))
-save.image(paste0('output/AG_briefing_analysis_output_', today, '.RData'))
-
-
 
 # RE-RUN ANALYSIS FOR THE PREVIOUS 7 DAYS, OUTPUT THE DOUBLING TIME TABLE ----
 t2.define<- t2.define - 7
@@ -510,8 +505,23 @@ for(r in 1:length(regions)){
 } 
 
 
-write.csv(Td.reportMINUS7, paste0('output/Td_report_', today, '_PREVIOUS_7_DAYS.csv'))
 
+Td.reportMINUS7$Td.obs<- formatC(Td.reportMINUS7$Td.obs, digits = 1, format = "f")
+Td.reportMINUS7$ci.low<- formatC(Td.reportMINUS7$ci.low, digits = 1, format = "f")
+Td.reportMINUS7$ci.upp<- formatC(Td.reportMINUS7$ci.upp, digits = 1, format = "f")
+
+
+# SAVE & WRITE ----
+
+t2.define<- today 
+t1.define<- t2.define - time_window
+t2 = t2.define
+t1 = t1.define
+
+
+write.csv(Td.report.analyses, paste0('output/Td_report_', today, '_t1.', t1, '_t2.', t2, '.csv'))
+write.csv(Td.reportMINUS7, paste0('output/Td_report_', today, '_PREVIOUS_7_DAYS.csv'))
+save.image(paste0('output/AG_briefing_analysis_output_', today, '.RData'))
 
 
 
