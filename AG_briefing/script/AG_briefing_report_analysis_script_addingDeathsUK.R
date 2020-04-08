@@ -27,7 +27,6 @@ t1.define<- t2.define - time_window
 # LOADING DATA ----
 
 
-
 d.uk<- # UK data, formatting variable names to fit in rest of the script
   read_excel(paste0('./data/', today, '/UK_data_', today, '.xlsx'), sheet = 1) %>%
   mutate(date = as.Date(date)) %>%
@@ -246,7 +245,7 @@ for(r in 1:length(regions)){
 } 
 
 
-# EPIDEMIC PROGRESSION DIFFERENCES ----
+# EPIDEMIC PROGRESSION - UK ----
 # Take the uk data, format it to be per 10k population, then pass it through the epidemic.diff() function, from sourced script.
 
 test<- d.uk %>%
@@ -280,11 +279,11 @@ for(i in 1:nrow(pairwise.comp)){
   
 }
 
-
 pairwise.comp$focal<- as.character(pairwise.comp$focal)
 pairwise.comp$focal[which(pairwise.comp$focal == 'Rest of UK')]<- 'rUKxL'
 pairwise.comp$versus<- as.character(pairwise.comp$versus)
 pairwise.comp$versus[which(pairwise.comp$versus == 'Rest of UK')]<- 'rUKxL'
+
 
 pairwise.comp.df<-
   pairwise.comp[order(pairwise.comp$epidemic.diff, na.last = TRUE, decreasing = TRUE), ]
@@ -325,7 +324,6 @@ pairwise.comp.HB.df$epidemic.diff.text<- formatC(pairwise.comp.HB.df$epidemic.di
 pairwise.comp.HB.df$focal<- factor(pairwise.comp.HB.df$focal, levels = rev(unique(as.character(pairwise.comp.HB.df$focal))))
 pairwise.comp.HB.df$versus<- factor(pairwise.comp.HB.df$versus, levels = unique(as.character(pairwise.comp.HB.df$versus)))
 #upper<- time.diff.df[-which(na.omit(time.diff.df$`Time difference (days)`) < 0),] # This is the dataframe used for the heatmap in final report
-
 
 
 
@@ -563,6 +561,7 @@ for(r in 1:length(regions)){
 Td.reportMINUS7$Td.obs<- formatC(Td.reportMINUS7$Td.obs, digits = 1, format = "f")
 Td.reportMINUS7$ci.low<- formatC(Td.reportMINUS7$ci.low, digits = 1, format = "f")
 Td.reportMINUS7$ci.upp<- formatC(Td.reportMINUS7$ci.upp, digits = 1, format = "f")
+
 
 
 # SAVE & WRITE ----

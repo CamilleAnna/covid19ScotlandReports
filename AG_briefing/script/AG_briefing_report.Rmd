@@ -2,8 +2,8 @@
 title: 'Briefing for C19AG: Comparison of doubling times'
 subtitle: 'NOT FOR DISTRIBUTION'
 author: "COVID-19 Epidemic Response Unit, University of Edinburgh"
-date: "06/04/2020"
-output: word_document
+date: "08/04/2020"
+output: pdf_document
 ---
 
 
@@ -11,7 +11,7 @@ output: word_document
 knitr::opts_chunk$set(echo = FALSE)
 
 setwd('/Users/s1687811/Documents/GitHub/covid19/AG_briefing/')
-today<- Sys.Date() - 1
+today<- Sys.Date() - 3
 
 # SOURCED SCRIPTS & ENVIRONMENTS
 # 1) load packages + used functions
@@ -260,34 +260,27 @@ box()
 
 &nbsp;
 
-```{r fig3, fig.height = 2.5, fig.width = 4, fig.align = "center", warning = FALSE}
+```{r fig3, fig.height = 4.2, fig.width = 4, fig.align = "center", warning = FALSE}
 
-pairwise.comp$epidemic.diff.text<- formatC(pairwise.comp$epidemic.diff, digits = 1, format = "f")
+pairwise.comp.df<- 
+  pairwise.comp.df %>%
+  rename(`Number of days difference` = epidemic.diff)
 
-pairwise.comp$epidemic.diff[is.na(pairwise.comp$epidemic.diff)] <- 0
-pairwise.comp$epidemic.diff.text[pairwise.comp$epidemic.diff == 0] <- 0
-
-
-pairwise.comp$focal<- as.character(pairwise.comp$focal)
-pairwise.comp$focal[which(pairwise.comp$focal == 'Rest of UK')]<- 'rUKxL'
-pairwise.comp$versus<- as.character(pairwise.comp$versus)
-pairwise.comp$versus[which(pairwise.comp$versus == 'Rest of UK')]<- 'rUKxL'
-
-pairwise.comp$focal<- factor(pairwise.comp$focal, levels = c('Scotland', 'rUKxL', 'London'))
-
-ggplot(pairwise.comp, aes(x = versus, y = focal, fill= epidemic.diff)) + 
+ggplot(pairwise.comp.df, aes(x = versus, y = focal, fill= `Number of days difference`)) + 
   geom_tile()+
   xlab('')+ylab('')+
-  scale_fill_gradient2(low="red", high="forestgreen", midpoint = 0) +
+  scale_fill_gradient2(low="forestgreen", high="firebrick", midpoint = 0) +
   geom_text(aes(label = epidemic.diff.text, x = versus, y = focal), size = 4, fontface = 2)+
   scale_x_discrete(position = "top")+
   theme_bw()+
-  theme(legend.position="none",
+  theme(legend.position="bottom",
+        #legend.text = element_text(size = 35),
+       legend.title = element_text(face = 2, size = 10),
         panel.border= element_rect(color = 'black', size = 0.5),
         axis.text.y = element_text(face="bold", colour="black", size=10),
-        axis.text.x = element_text(colour="black", face="bold", size=10),
-        axis.title.y = element_text(face="bold", colour="black", size=15),
-        axis.title.x = element_text(face="bold", colour="black", size=15),
+        axis.text.x = element_text(colour="black", face="bold", size=10, angle = 90, hjust = 0, vjust = 0.5),
+        #axis.title.y = element_text(face="bold", colour="black", size=25),
+        #axis.title.x = element_text(face="bold", colour="black", size=25),
         axis.line.y = element_line(color="black", size = 0.5),
         axis.line.x = element_line(color="black", size = 0.5),
         plot.title = element_text(lineheight=.8, face="bold", hjust = 0.5),
@@ -296,7 +289,7 @@ ggplot(pairwise.comp, aes(x = versus, y = focal, fill= epidemic.diff)) +
 ```
 &nbsp;
 
-**Figure 3. Pairwise epidemic progression comparison**. The reported numbers are the numbers of days ahead (positive numbers, green) or behind (negative numbers, red) the regions in horizontal entries are relative to the regions in vertical entries.
+**Figure 3. Pairwise epidemic progression comparison**. The reported numbers are the numbers of days ahead (positive numbers, red) or behind (negative numbers, green) the regions in horizontal entries are relative to the regions in vertical entries. Horizontal entries are arrange from most ahead to least ahead.
 
  
 \newpage
@@ -456,7 +449,39 @@ box()
 
 \newpage
 
-```{r fig5, fig.height = 7.5, fig.width = 10, fig.align = "center", warning = FALSE}
+```{r fig5, echo = FALSE, fig.height = 8, fig.width = 7, out.width= "100%"}
+
+pairwise.comp.HB.df<- 
+  pairwise.comp.HB.df %>%
+  rename(`Number of days difference` = epidemic.diff)
+
+ggplot(pairwise.comp.HB.df, aes(x = versus, y = focal, fill= `Number of days difference`)) + 
+  geom_tile()+
+  xlab('')+ylab('')+
+  scale_fill_gradient2(low="forestgreen", high="firebrick", midpoint = 0) +
+  geom_text(aes(label = epidemic.diff.text, x = versus, y = focal), size = 4, fontface = 2)+
+  scale_x_discrete(position = "top")+
+  theme_bw()+
+  theme(legend.position="bottom",
+        #legend.text = element_text(size = 35),
+       legend.title = element_text(face = 2, size = 10),
+        panel.border= element_rect(color = 'black', size = 0.5),
+        axis.text.y = element_text(face="bold", colour="black", size=10),
+        axis.text.x = element_text(colour="black", face="bold", size=10, angle = 90, hjust = 0, vjust = 0.5),
+        #axis.title.y = element_text(face="bold", colour="black", size=25),
+        #axis.title.x = element_text(face="bold", colour="black", size=25),
+        axis.line.y = element_line(color="black", size = 0.5),
+        axis.line.x = element_line(color="black", size = 0.5),
+        plot.title = element_text(lineheight=.8, face="bold", hjust = 0.5),
+        panel.grid.major = element_line(color = 'grey', linetype = 'dotted'))
+
+```
+&nbsp;
+
+**Figure 5. Pairwise epidemic progression comparison**. The reported numbers are the numbers of days ahead (positive numbers, red) or behind (negative numbers, green) the health boards in horizontal entries are relative to the healthboard in vertical entries. Horizontal entries are arrange from most ahead to least ahead.
+
+
+```{r fig6, fig.height = 7.5, fig.width = 10, fig.align = "center", warning = FALSE}
 
 # Setting up a list to store last row of each cumulative incidence dataframes with their simulations
 dat.hist.cumsum10k<- vector('list', length = length(regions))
@@ -508,13 +533,13 @@ ggplot(df.hist.cumsum10k, aes(x = region, y = cumNumCase_10k))+
 ```
 &nbsp;
 
-**Figure 5. Cumulative incidence for all Scottish Health Boards up to `r format(today, "%d/%m/%Y")`**. The error bars show the 95%CI of the cumulative incidence per 10,000 population reached at last time point over the bootstrapped simulated datasets with Poisson error structure.
+**Figure 6. Cumulative incidence for all Scottish Health Boards up to `r format(today, "%d/%m/%Y")`**. The error bars show the 95%CI of the cumulative incidence per 10,000 population reached at last time point over the bootstrapped simulated datasets with Poisson error structure.
 
 &nbsp;
 
 \newpage
 
-```{r fig6, fig.height = 7, fig.width = 9, fig.align = "center", warning = FALSE}
+```{r fig7, fig.height = 7, fig.width = 9, fig.align = "center", warning = FALSE}
 
 
 # Reformat the Td report table to use as basic for plotting Dt in correct order
@@ -574,7 +599,7 @@ for(c in 1:nrow(Td.report.analyses.clean.hb)){
 ```
 &nbsp;
 
-**Figure 6. Doubling time of cases**. Doubling times are calculated over a 7 day period up to `r format(today, "%d/%m/%Y")`. Error bars indicate 95% CIs.
+**Figure 7. Doubling time of cases**. Doubling times are calculated over a 7 day period up to `r format(today, "%d/%m/%Y")`. Error bars indicate 95% CIs.
 
 \newpage
 
