@@ -3,6 +3,12 @@
 # AG BRIEFING REPORT # 
 # ~~~~~~~~~~~~~~~~~~~#
 
+UPDATE OF 09/04:
+1) No manual edit on Scotland data needed anymore, using Feifei's code
+2) Fetches data not from sheet index but from sheet names, respectively "Scotland Deaths" and "Scotland Cases" (so order and number of sheets do not matter anymore).
+3) Added heatmap of pairwise epidemic progression comparison as figure 7
+4) Fixed discrepancy between inset and legend numbers reported for figure 1 (deaths).
+
 # ~~~~~~~~~~~~~~~~~~~#
 #     SCRIPTS:       #
 # ~~~~~~~~~~~~~~~~~~~#
@@ -23,6 +29,7 @@
 # compute.td.m1.v2() : actually computes the doubling time. Takes a dataframe (date, cumNumCases) as argument (a bit annoying that the variables HAS TO BE NAMED 'cumNumCases', e.g. can be confusing when having death data to call the cumulative number of deaths 'cumNumCases',. This is a feature to be improved)
 # sim.epi() : simulates epidemic curve to generate poisson error. Takes a dataframe (date, cumNumCases) as argument. Spits out that same dataframe with the number of observed new cases appended to it, observed ('numNewCases') and simulated ('V' variables). There will be as many 'V' columns as iteration of the bootstrap chosen, which is set by the argument 'its'. 
 # Td.lapply() : simply applies the compute.td.m1.v2() over a list output. Convenient for shortening code at various points.
+# pairwise.comp(): uses Feifei's code to compare numbers of days ahead/behind of the epidemic. Code generalised to compare any two epidemic base on a dataframe with (date, country1, country2)
 
 3) AG_briefing_report: Tha actual Rmarkdown doc.
 # This sources the script (2) and loads the RData object output from script (1)
@@ -36,16 +43,14 @@
 
 /covid19/AG_briefing/data: one folder per day.
 
-Each contain (i) UK data from that Feifei uploads on the dropbox everyday (ii) the daily report that Giles sends, (iii) an edited version of that daily report ... the format of data has changed overtime and I decided to stick to my initial script, so I manually adjust the excel file everytime. Not ideal. To be improved.
-Manual edits are:
-- on all sheets: the last two days don't read well in R for some reason. Edit them to set them as 'text'
-- sheet 1: remove the 0, 1 header
-- sheet 2: remove the numbered header, change 'Health_boards' to 'date', remove the last two rows (Increase, pincrease)
-- sheet 3: not using this one, start from raw cases numbers
-- sheet 4: remove coma after 'Grampian', remove 'Dates'
+Each contain
+(i) UK data from that Feifei uploads on the dropbox everyday
+(ii) the daily report that Giles sends.
+
+UPDATE OF 09/04: No manual edit on Scotland data needed anymore, using Feifei's code + Fetches data not from sheet index but from sheet names, respectively "Scotland Deaths" and "Scotland Cases" (so order and number of sheets do not matter anymore).
+
 
 /covid19/AG_briefing/input_files/popsizes_grouped.xlsx
-
 Populations sizes used to compute incidence per 10k pop. in script
 
 
@@ -53,7 +58,7 @@ Populations sizes used to compute incidence per 10k pop. in script
 #  PRODUCING THE REPORT #
 # ~~~~~~~~~~~~~~~~~~~~~~#
 
-1) Get the UK and Scotland data, save in the 'data' folder, do the manual edits on the Scotland data and save under 'reviewed' (see as in previous days)
+1) Get the UK and Scotland data, save in the 'data' folder.
 2) Open AG_briefing_analysis_script.R:
 	- make sure the paths to data are correct
 	- set the variable 'today' so that it matches the data you want to analyse
