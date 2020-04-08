@@ -12,8 +12,8 @@
 
 setwd('/Users/s1687811/Documents/GitHub/covid19/AG_briefing/')
 
-today<- Sys.Date() - 3
-its = 10
+today<- Sys.Date()
+its = 1000
 set.seed(as.numeric(today))
 
 source('/Users/s1687811/Documents/GitHub/covid19/script/sourced_functions_doublingTime_reports.R') 
@@ -26,8 +26,6 @@ t1.define<- t2.define - time_window
 
 # LOADING DATA ----
 
-
-
 d.uk<- # UK data, formatting variable names to fit in rest of the script
   read_excel(paste0('./data/', today, '/UK_data_', today, '.xlsx'), sheet = 1) %>%
   mutate(date = as.Date(date)) %>%
@@ -38,16 +36,15 @@ pops.uk<- read_excel('./input_files/popsizes_grouped.xlsx', sheet = 2) %>% as.da
 
 
 d.cases<- # Scotland data --> no need to edit
-  read.xlsx(paste0('./data/', today, '/SARS-Cov-2-Scotland_all_', today,'.xlsx'), 4)[1:as.numeric(as.Date(format(today,"%Y/%m/%d"))-as.Date("2020/03/01")-1),] %>%
+  read.xlsx(paste0('./data/', today, '/SARS-Cov-2-Scotland_all_', today,'.xlsx'), sheetName = 'Cases Grouped')[1:as.numeric(as.Date(format(today,"%Y/%m/%d"))-as.Date("2020/03/01")-1),] %>%
   rename(date = Dates) %>%
   mutate(date = seq(as.Date("2020/03/01"), as.Date(format(today,"%Y/%m/%d")), by = "day")[-c(2,3)]) %>%
   as.data.frame()
 names(d.cases) <- gsub(pattern="[.][.]", replacement=" ", names(d.cases))## read.xlsx will change space between words to ., so change back to space
 names(d.cases) <- gsub(pattern="[.]", replacement=" ", names(d.cases))
 
-
 d.death<-
-  read_excel(paste0('./data/', today, '/SARS-Cov-2-Scotland_all_', today,'.xlsx'), sheet = 1,skip=1) %>%
+  read_excel(paste0('./data/', today, '/SARS-Cov-2-Scotland_all_', today,'.xlsx'), sheet = 'Scotland Deaths',skip=1) %>%
   rename(date = Date,
          cumNumCases = Deaths_Cum) %>% # ! ambiguous variable naming, but this is indeed DEATHS we are dealing with. However the sim.epi() and compute.td.m1.v2() functions take as argument a table where the cumulative number variable is called cumNumCases, whatever "case" is, can be cases, deaths, .... Improvment needed on the sim.epi() and compute.td() function to make them more general!
   mutate(date = seq(as.Date("2020/03/01"), as.Date(format(today,"%Y/%m/%d")), by = "day")) %>%

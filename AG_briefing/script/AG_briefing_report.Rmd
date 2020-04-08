@@ -1,9 +1,11 @@
 ---
 title: 'Briefing for C19AG: Comparison of doubling times'
-subtitle: 'NOT FOR DISTRIBUTION'
 author: "COVID-19 Epidemic Response Unit, University of Edinburgh"
-date: "08/04/2020"
-output: pdf_document
+date: "09/04/2020"
+output:
+  word_document: default
+  pdf_document: default
+subtitle: NOT FOR DISTRIBUTION
 ---
 
 
@@ -11,7 +13,7 @@ output: pdf_document
 knitr::opts_chunk$set(echo = FALSE)
 
 setwd('/Users/s1687811/Documents/GitHub/covid19/AG_briefing/')
-today<- Sys.Date() - 3
+today<- Sys.Date()
 
 # SOURCED SCRIPTS & ENVIRONMENTS
 # 1) load packages + used functions
@@ -43,7 +45,7 @@ yticks.font = 2
 We compare the size and rate of increase of the COVID-19 epidemic for Scotland, London and the rest of the UK except for London (rUKxL).  
 &nbsp;
  
-**The epidemic in Scotland is ~`r abs(round(Scotland_vs_London, 0))` days `r text.Scotland_vs_London` London and is now growing at a faster rate but may be slowing.**  
+**The epidemic in Scotland is ~`r abs(round(Scotland_vs_London, 0))` days `r text.Scotland_vs_London` London and is now growing at a XXXXXXX rate XXXXXX.**  
 
 &nbsp;
  
@@ -53,26 +55,28 @@ Based on deaths:
 * The current doubling time for deaths in Scotland is `r Td.report[Td.report$variable == 'Scotland death','Td.obs']` days (95% confidence interval (CI): `r Td.report[Td.report$variable == 'Scotland death','ci.low']` - `r Td.report[Td.report$variable == 'Scotland death','ci.upp']` days) (Figure 1).  
 * This is **XXXXXX** than the doubling time for previous 7 days (`r Td.reportMINUS7[Td.reportMINUS7$variable == 'Scotland death','Td.obs']` days; 95%CI: `r Td.reportMINUS7[Td.reportMINUS7$variable == 'Scotland death','ci.low']` - `r Td.reportMINUS7[Td.reportMINUS7$variable == 'Scotland death','ci.upp']` days). 
 &nbsp;
-
+ 
+&nbsp;
+ 
 Based on case counts per 10,000 population available as of `r format(today, "%d/%m/%Y")`:  
 &nbsp;
  
 * The epidemic in Scotland is `r abs(Scotland_vs_London)` days `r text.Scotland_vs_London`  London and `r abs(Scotland_vs_rUKxL)` days `r text.Scotland_vs_rUKxL` of rUKxL (Figure 2, Figure 3).  
 * The current 7-day doubling time in Scotland is `r Td.report[Td.report$variable == 'Scotland cases','Td.obs']` days (95%CI: `r Td.report[Td.report$variable == 'Scotland cases','ci.low']` - `r Td.report[Td.report$variable == 'Scotland cases','ci.upp']` days).  
 * This is **XXXXXX** than the doubling time for previous 7 days (`r Td.reportMINUS7[Td.reportMINUS7$variable == 'Scotland cases','Td.obs']` days; 95%CI: `r Td.reportMINUS7[Td.reportMINUS7$variable == 'Scotland cases','ci.low']` - `r Td.reportMINUS7[Td.reportMINUS7$variable == 'Scotland cases','ci.upp']` days).  
-* The current doubling time in Scotland is **XXXXXX** than London  (`r Td.report[Td.report$variable == 'London cases','Td.obs']` days, 95%CI: `r Td.report[Td.report$variable == 'London cases','ci.low']` - `r Td.report[Td.report$variable == 'London cases','ci.upp']` days) and is **XXXXXX** to rUKxL (`r Td.report[Td.report$variable == 'Rest of UK cases','Td.obs']` days, 95%CI: `r Td.report[Td.report$variable == 'Rest of UK cases','ci.low']` - `r Td.report[Td.report$variable == 'Rest of UK cases','ci.upp']` days) over the same time period.  
-* Across Health Boards in Scotland there is variation in cumulative case incidence (`r formatC(round(min(tail(df.fig3b, 1)[,-1]), 1), digit = 1, format = 'f')` to `r formatC(round(max(tail(df.fig3b, 1)[,-1]), 1), digit = 1, format = 'f')` per 10,000 population, Figures 4, 5) and doubling time (`r min(Td.report[5:nrow(Td.report),'Td.obs'])` to `r max(Td.report[5:nrow(Td.report),'Td.obs'])` days, Figure 6, Table 1).  
+* The current doubling time in Scotland is **XXXXXX** than London  (`r Td.report[Td.report$variable == 'London cases','Td.obs']` days, 95%CI: `r Td.report[Td.report$variable == 'London cases','ci.low']` - `r Td.report[Td.report$variable == 'London cases','ci.upp']` days) and is **XXXXXX** to rUKxL (`r Td.report[Td.report$variable == 'Rest of UK cases','Td.obs']` days, 95%CI: `r Td.report[Td.report$variable == 'Rest of UK cases','ci.low']` - `r Td.report[Td.report$variable == 'Rest of UK cases','ci.upp']` days) over the same time period (Figure 2).  
+* Across Health Boards in Scotland there is variation in cumulative case incidence (`r formatC(round(min(tail(df.fig3b, 1)[,-1]), 1), digit = 1, format = 'f')` to `r formatC(round(max(tail(df.fig3b, 1)[,-1]), 1), digit = 1, format = 'f')` per 10,000 population, Figures 4, 5) and doubling time (`r min(Td.report[5:nrow(Td.report),'Td.obs'])` to `r max(Td.report[5:nrow(Td.report),'Td.obs'])` days, Figure 7, Table 1).  
   
 # Results
 
 ```{r fig1, fig.height = 6, fig.width = 6, fig.align = "center"}
 
 # Set up figure parameters
-yaxti.f1 = 50
-xaxti.f1 = 7
+yaxti.f1 = 100
+#xaxti.f1 = 7
 
-yseq = seq(0, round_any(max(d.death.sim.2$cumNumCases), 50, f = ceiling), yaxti.f1)
-xseq = seq.Date(from = min(d.death.sim.2$date), to = max(d.death.sim.2$date), by = xaxti.f1)
+yseq = seq(0, round_any(max(d.death.sim.2$cumNumCases), 100, f = ceiling), yaxti.f1)
+xseq = seq.Date(from = min(d.death.sim.2$date), to = max(d.death.sim.2$date), length.out = 5)
 
 
 # Draw plot, add axes labels, add axes ticks
@@ -99,21 +103,24 @@ abline(h = yseq, v = xseq, lty = 'dotted', col = 'lightgrey')
 # Add legend
 legend("topleft",
        legend = c("Doubling time (95%CI):",
-                  paste('  ', Td.death.obs, ' (',ci.death.low, '-', ci.death.upp, ')')),
+                  paste('  ', Td.report[Td.report$variable == 'Scotland death','Td.obs'], ' (',Td.report[Td.report$variable == 'Scotland death','ci.low'], '-', Td.report[Td.report$variable == 'Scotland death','ci.upp'], ')')),
        col = 'black',
        ncol = 1,
        title.adj = 0.4,
        y.intersp = 1,
        text.font = c(2,1),
-       text.width = 10,
+       text.width = 12,
        inset=c(-0.05,-0.005))
 box()
+
+
+
 
 # Replot line on top to make it more visible
 lines(cumNumCases ~ date, data = d.death.sim.2, lwd = 2)
 
 ```
-**Figure 1. Epidemic curve for Scotland based on deaths over time up to `r format(today, "%d/%m/%Y")`.** Doubling time estimated over the past 7 days is `r Td.report[1,'Td.obs']` days (95% confidence interval (CI): `r Td.report[1,'ci.low']`-`r Td.report[1,'ci.upp']` days).
+**Figure 1. Epidemic curve for Scotland based on deaths over time up to `r format(today, "%d/%m/%Y")`.** Doubling time estimated over the past 7 days is `r Td.report[Td.report$variable == 'Scotland death','Td.obs']` days (95% confidence interval (CI): `r Td.report[Td.report$variable == 'Scotland death','ci.low']`-`r Td.report[Td.report$variable == 'Scotland death','ci.upp']` days).
 
 &nbsp;
 
@@ -254,11 +261,6 @@ box()
 
 &nbsp;
  
-&nbsp;
-
-&nbsp;
-
-&nbsp;
 
 ```{r fig3, fig.height = 4.2, fig.width = 4, fig.align = "center", warning = FALSE}
 
@@ -319,8 +321,8 @@ par(mfrow = c(1,2))
 # Set up figure parameters
 yaxti.f3 = 200
 xaxti.f3 = 7
-yseq = seq(0, round_any(max(d.cases[,2:ncol(d.cases)]), 10, f = ceiling), yaxti.f3)
-xseq = seq.Date(from = min(d.cases$date), to = max(d.cases$date), by = xaxti.f3)
+yseq = seq(0, round_any(max(d.cases[,2:ncol(d.cases)]), 100, f = ceiling), yaxti.f3)
+xseq = seq.Date(from = min(d.cases$date), to = max(d.cases$date), length.out = 5)
 
 # Draw plot, axes labels, axes ticks, background grids
 plot(Ayrshire ~ date, data = d.cases, type = 'l', main = '  ',
@@ -387,7 +389,7 @@ df.fig3b[,2:ncol(df.fig3b)]<- log10(df.fig3b[,2:ncol(df.fig3b)])
 yseq = seq(round_any(min(df.fig3b[,2:ncol(df.fig3b)], na.rm = TRUE), 1, f = floor),
            round_any(max(df.fig3b[,2:ncol(df.fig3b)], na.rm = TRUE), 1, f = ceiling),
            yaxti.f3b)
-xseq = seq.Date(from = min(df.fig3b$date), to = max(df.fig3b$date), by = xaxti.f3b)
+xseq = seq.Date(from = min(df.fig3b$date), to = max(df.fig3b$date), length.out = 5)
 
 # Draw plot, axes labels, axes ticks, background grids
 plot(Ayrshire ~ date, data = df.fig3b, type = 'l', main = '  ',
@@ -449,39 +451,7 @@ box()
 
 \newpage
 
-```{r fig5, echo = FALSE, fig.height = 8, fig.width = 7, out.width= "100%"}
-
-pairwise.comp.HB.df<- 
-  pairwise.comp.HB.df %>%
-  rename(`Number of days difference` = epidemic.diff)
-
-ggplot(pairwise.comp.HB.df, aes(x = versus, y = focal, fill= `Number of days difference`)) + 
-  geom_tile()+
-  xlab('')+ylab('')+
-  scale_fill_gradient2(low="forestgreen", high="firebrick", midpoint = 0) +
-  geom_text(aes(label = epidemic.diff.text, x = versus, y = focal), size = 4, fontface = 2)+
-  scale_x_discrete(position = "top")+
-  theme_bw()+
-  theme(legend.position="bottom",
-        #legend.text = element_text(size = 35),
-       legend.title = element_text(face = 2, size = 10),
-        panel.border= element_rect(color = 'black', size = 0.5),
-        axis.text.y = element_text(face="bold", colour="black", size=10),
-        axis.text.x = element_text(colour="black", face="bold", size=10, angle = 90, hjust = 0, vjust = 0.5),
-        #axis.title.y = element_text(face="bold", colour="black", size=25),
-        #axis.title.x = element_text(face="bold", colour="black", size=25),
-        axis.line.y = element_line(color="black", size = 0.5),
-        axis.line.x = element_line(color="black", size = 0.5),
-        plot.title = element_text(lineheight=.8, face="bold", hjust = 0.5),
-        panel.grid.major = element_line(color = 'grey', linetype = 'dotted'))
-
-```
-&nbsp;
-
-**Figure 5. Pairwise epidemic progression comparison**. The reported numbers are the numbers of days ahead (positive numbers, red) or behind (negative numbers, green) the health boards in horizontal entries are relative to the healthboard in vertical entries. Horizontal entries are arrange from most ahead to least ahead.
-
-
-```{r fig6, fig.height = 7.5, fig.width = 10, fig.align = "center", warning = FALSE}
+```{r fig5, fig.height = 7.5, fig.width = 10, fig.align = "center", warning = FALSE}
 
 # Setting up a list to store last row of each cumulative incidence dataframes with their simulations
 dat.hist.cumsum10k<- vector('list', length = length(regions))
@@ -533,13 +503,14 @@ ggplot(df.hist.cumsum10k, aes(x = region, y = cumNumCase_10k))+
 ```
 &nbsp;
 
-**Figure 6. Cumulative incidence for all Scottish Health Boards up to `r format(today, "%d/%m/%Y")`**. The error bars show the 95%CI of the cumulative incidence per 10,000 population reached at last time point over the bootstrapped simulated datasets with Poisson error structure.
+**Figure 5. Cumulative incidence for all Scottish Health Boards up to `r format(today, "%d/%m/%Y")`**. The error bars show the 95%CI of the cumulative incidence per 10,000 population reached at last time point over the bootstrapped simulated datasets with Poisson error structure.
 
 &nbsp;
 
 \newpage
 
-```{r fig7, fig.height = 7, fig.width = 9, fig.align = "center", warning = FALSE}
+
+```{r fig6, fig.height = 7, fig.width = 9, fig.align = "center", warning = FALSE}
 
 
 # Reformat the Td report table to use as basic for plotting Dt in correct order
@@ -599,7 +570,41 @@ for(c in 1:nrow(Td.report.analyses.clean.hb)){
 ```
 &nbsp;
 
-**Figure 7. Doubling time of cases**. Doubling times are calculated over a 7 day period up to `r format(today, "%d/%m/%Y")`. Error bars indicate 95% CIs.
+**Figure 6. Doubling time of cases**. Doubling times are calculated over a 7 day period up to `r format(today, "%d/%m/%Y")`. Error bars indicate 95% CIs.
+
+\newpage
+
+
+```{r fig7, echo = FALSE, fig.height = 8, fig.width = 7, out.width= "100%"}
+
+pairwise.comp.HB.df<- 
+  pairwise.comp.HB.df %>%
+  rename(`Number of days difference` = epidemic.diff)
+
+ggplot(pairwise.comp.HB.df, aes(x = versus, y = focal, fill= `Number of days difference`)) + 
+  geom_tile()+
+  xlab('')+ylab('')+
+  scale_fill_gradient2(low="forestgreen", high="firebrick", midpoint = 0) +
+  geom_text(aes(label = epidemic.diff.text, x = versus, y = focal), size = 4, fontface = 2)+
+  scale_x_discrete(position = "top")+
+  theme_bw()+
+  theme(legend.position="bottom",
+        #legend.text = element_text(size = 35),
+       legend.title = element_text(face = 2, size = 10),
+        panel.border= element_rect(color = 'black', size = 0.5),
+        axis.text.y = element_text(face="bold", colour="black", size=10),
+        axis.text.x = element_text(colour="black", face="bold", size=10, angle = 90, hjust = 0, vjust = 0.5),
+        #axis.title.y = element_text(face="bold", colour="black", size=25),
+        #axis.title.x = element_text(face="bold", colour="black", size=25),
+        axis.line.y = element_line(color="black", size = 0.5),
+        axis.line.x = element_line(color="black", size = 0.5),
+        plot.title = element_text(lineheight=.8, face="bold", hjust = 0.5),
+        panel.grid.major = element_line(color = 'grey', linetype = 'dotted'))
+
+```
+&nbsp;
+
+**Figure 7. Pairwise epidemic progression comparison**. The reported numbers are the numbers of days ahead (positive numbers, red) or behind (negative numbers, green) the health boards in horizontal entries are relative to the healthboard in vertical entries. Horizontal entries are arrange from most ahead to least ahead.
 
 \newpage
 
@@ -633,7 +638,7 @@ kable(Td.report.clean.for.output[,1:5])
 # Data
 
 - Case counts for Scotland and for Scottish HBs from https://www.gov.scot/coronavirus-covid-19/ (accessed 1400 `r format(today, "%d/%m/%Y")`).  
-- Case counts for London and rUK except London from https://www.arcgis.com/apps/opsdashboard/index.html#/f94c3c90da5b4e9f9a0b19484dd4bb14 (accessed 2000 `r format(today, "%d/%m/%Y")`).  
+- Case counts for London and rUKxL from https://www.arcgis.com/apps/opsdashboard/index.html#/f94c3c90da5b4e9f9a0b19484dd4bb14 (accessed 2000 `r format(today, "%d/%m/%Y")`).  
 - Death count for Scotland from https://www.gov.scot/coronavirus-covid-19/ (accessed 1400 `r format(today, "%d/%m/%Y")`).  
 - Population counts from the Office of National Statistics (mid-year 2018).
     - UK:  https://www.ons.gov.uk/peoplepopulationandcommunity/populationandmigration/populationestimates/datasets/populationestimatesforukenglandandwalesscotlandandnorthernireland, Mid-2018, spreadsheet 'MYE2-all' (accessed 1140 26/03/20) 
