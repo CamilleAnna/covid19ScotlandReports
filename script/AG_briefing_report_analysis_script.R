@@ -13,7 +13,7 @@
 setwd('/Users/s1687811/Documents/GitHub/covid19/')
 
 today<- Sys.Date() - 2
-its = 10
+its = 1000
 set.seed(as.numeric(today))
 
 source('/Users/s1687811/Documents/GitHub/covid19/script/sourced_functions_doublingTime_reports.R') 
@@ -82,7 +82,7 @@ for(r in 1:length(regions)){
     mutate(cumNumCases = cumsum(numNewCases)) %>%  
     select(date, cumNumCases)
   
-  d.uk.deaths.clean.sim<- sim.epi(d.uk.deaths.clean, its = 1000, plotsim = FALSE)
+  d.uk.deaths.clean.sim<- sim.epi(d.uk.deaths.clean, its = its, plotsim = FALSE)
   
   
   d.uk.deaths.clean.sim.norm<-
@@ -154,10 +154,6 @@ for(r in 1:length(regions)){
     rename(cumNumCases = numNewCases) %>%
     cbind(date = d.clean.sim$date) %>%
     select(c(ncol(.), seq(1, ncol(.)-1)))
-  
-  
-  #t2<- tail(tail(d.clean.sim.norm$date, 8), 1) # t2: latest date
-  #t1<- head(tail(d.clean.sim.norm$date, 8), 1) # t1: t2 - 7 available time steps
   
   
   d.clean.sim.norm.list<-
@@ -260,10 +256,10 @@ for(r in 1:length(regions)){
 } 
 
 
-# EPIDEMIC PROGRESSION DIFFERENCES ----
+# EPIDEMIC PROGRESSION DIFFERENCES UK - BASED ON CASES ----
 # Take the uk data, format it to be per 10k population, then pass it through the epidemic.diff() function, from sourced script.
 
-test<- d.uk %>%
+per10k.duk<- d.uk %>%
   gather('region', 'cumCases', 2:4) %>%
   left_join(pops.uk, by = 'region') %>%
   mutate(cumCases10k = cumCases * (10000/popsize)) %>%
@@ -271,26 +267,26 @@ test<- d.uk %>%
   spread('region', 'cumCases10k')
 
 
-Scotland_vs_London<- epidemic.diff(test, 'Scotland', 'London')
-Scotland_vs_rUKxL<- epidemic.diff(test, 'Scotland', 'Rest of UK')
+Scotland_vs_London.cases<- epidemic.diff(per10k.duk, 'Scotland', 'London')
+Scotland_vs_rUKxL.cases<- epidemic.diff(per10k.duk, 'Scotland', 'Rest of UK')
 
 # To use in main body  of the text. If difference is negative, the 'focal' country is behind. If the difference is positive, the 'focal' country is ahead. The main body of the text will automatically be updated to match the value of computed difference.
-text.Scotland_vs_London<- ifelse(Scotland_vs_London > 0, 'ahead', 'behind')
-text.Scotland_vs_rUKxL<- ifelse(Scotland_vs_rUKxL > 0, 'ahead', 'behind')
+text.Scotland_vs_London.cases<- ifelse(Scotland_vs_London.cases > 0, 'ahead', 'behind')
+text.Scotland_vs_rUKxL.cases<- ifelse(Scotland_vs_rUKxL.cases > 0, 'ahead', 'behind')
 
 
 # Do it for all pairwise comparison (could use it to make a heatmap..?)
 pairwise.comp<- 
 expand.grid(
-  data.frame(focal = colnames(test)[-1],
-             versus = colnames(test[-1]))
+  data.frame(focal = colnames(per10k.duk)[-1],
+             versus = colnames(per10k.duk[-1]))
 )
 pairwise.comp$epidemic.diff<- NA
 pairwise.comp$focal<- as.character(pairwise.comp$focal)
 pairwise.comp$versus<- as.character(pairwise.comp$versus)
 for(i in 1:nrow(pairwise.comp)){
   
-  pairwise.comp$epidemic.diff[i]<- epidemic.diff(test, pairwise.comp$focal[i], pairwise.comp$versus[i])
+  pairwise.comp$epidemic.diff[i]<- epidemic.diff(per10k.duk, pairwise.comp$focal[i], pairwise.comp$versus[i])
   
 }
 
@@ -305,6 +301,24 @@ pairwise.comp.df<-
 pairwise.comp.df$epidemic.diff.text<- formatC(pairwise.comp.df$epidemic.diff, digits = 1, format = "f")
 pairwise.comp.df$focal<- factor(pairwise.comp.df$focal, levels = rev(unique(as.character(pairwise.comp.df$focal))))
 pairwise.comp.df$versus<- factor(pairwise.comp.df$versus, levels = unique(as.character(pairwise.comp.df$versus)))
+
+
+# EPIDEMIC PROGRESSION DIFFERENCE UK - BASED ON DEATHS ----
+
+per10k.UKdeaths<- d.uk.deaths %>%
+  gather('region', 'cumDeaths', 2:ncol(.)) %>%
+  left_join(pops.uk, by = 'region') %>%
+  mutate(cumDeaths10k = cumDeaths * (10000/popsize)) %>%
+  select(-cumDeaths, -popsize) %>%
+  spread('region', 'cumDeaths10k')
+
+
+Scotland_vs_London.deaths<- epidemic.diff(per10k.UKdeaths, 'Scotland', 'London')
+Scotland_vs_rUKxL.deaths<- epidemic.diff(per10k.UKdeaths, 'Scotland', 'Rest of UK')
+
+
+text.Scotland_vs_London.deaths<- ifelse(Scotland_vs_London.deaths > 0, 'ahead', 'behind')
+text.Scotland_vs_rUKxL.deaths<- ifelse(Scotland_vs_rUKxL.deaths > 0, 'ahead', 'behind')
 
 
 
@@ -370,7 +384,7 @@ for(r in 1:length(regions)){
     mutate(cumNumCases = cumsum(numNewCases)) %>%  
     select(date, cumNumCases)
   
-  d.uk.deaths.clean.sim<- sim.epi(d.uk.deaths.clean, its = 1000, plotsim = FALSE)
+  d.uk.deaths.clean.sim<- sim.epi(d.uk.deaths.clean, its = its, plotsim = FALSE)
   
   
   d.uk.deaths.clean.sim.norm<-

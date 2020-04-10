@@ -3,8 +3,8 @@ title: 'Briefing for C19AG: Comparison of doubling times'
 author: "COVID-19 Epidemic Response Unit, University of Edinburgh"
 date: "09/04/2020"
 output:
-  pdf_document: default
   word_document: default
+  pdf_document: default
 subtitle: NOT FOR DISTRIBUTION
 ---
 
@@ -46,17 +46,17 @@ yticks.font = 2
 We compare the size and rate of increase of the COVID-19 epidemic for Scotland, London and the rest of the UK except for London (rUKxL).  
 &nbsp;
  
-**The epidemic in Scotland is ~8-12 days behind London and is now growing at a faster rate but is slowing down.**  
+**The epidemic in Scotland is XXXXXX days behind London and is now XXXXXXXX.**  
 
 &nbsp;
  
 **Based on deaths**:  
 &nbsp;
  
-* The epidemic in Scotland is 12.1 days behind London and 3.5 days behind rUKxL (Figure 1).  
-* The current 7-day doubling time for deaths in Scotland is `r Td.report[Td.report$variable == 'Scotland deaths','Td.obs']` days (95% confidence interval (CI): `r Td.report[Td.report$variable == 'Scotland deaths','ci.low']` - `r Td.report[Td.report$variable == 'Scotland deaths','ci.upp']` days) (Figure 1).  
-* This is significantly shorter than the doubling time for deaths for the previous 7 days (`r Td.reportMINUS7[Td.reportMINUS7$variable == 'Scotland deaths','Td.obs']` days; 95%CI: `r Td.reportMINUS7[Td.reportMINUS7$variable == 'Scotland deaths','ci.low']` - `r Td.reportMINUS7[Td.reportMINUS7$variable == 'Scotland deaths','ci.upp']` days).  
-* This is significantly shorter than the deaths doubling time for London (9.3 days; 95%CI: 8.7 – 9.9 days) and not significantly different from the deaths doubling time for rUKxL (3.3 days; 95%CI: 3.3 – 3.4 days).  
+* The epidemic in Scotland is `r abs(Scotland_vs_London.deaths)` days `r text.Scotland_vs_London.deaths` London and `r abs(Scotland_vs_rUKxL.deaths)` days `r text.Scotland_vs_rUKxL.deaths` rUKxL (Figure 1).  
+* The current 7 day doubling time for deaths in Scotland is `r Td.report[Td.report$variable == 'Scotland deaths','Td.obs']` days (95% confidence interval (CI): `r Td.report[Td.report$variable == 'Scotland deaths','ci.low']` - `r Td.report[Td.report$variable == 'Scotland deaths','ci.upp']` days) (Figure 1).  
+* This is **XXXXXX** than the doubling time for deaths for the previous 7 days (`r Td.reportMINUS7[Td.reportMINUS7$variable == 'Scotland deaths','Td.obs']` days; 95%CI: `r Td.reportMINUS7[Td.reportMINUS7$variable == 'Scotland deaths','ci.low']` - `r Td.reportMINUS7[Td.reportMINUS7$variable == 'Scotland deaths','ci.upp']` days).  
+* This is **XXXXXXX** than the deaths doubling time for London (`r Td.report[Td.report$variable == 'London deaths','Td.obs']` days; 95%CI: `r Td.report[Td.report$variable == 'London deaths','ci.low']` – `r Td.report[Td.report$variable == 'London deaths','ci.upp']` days) and **XXXXXXX** from the deaths doubling time for rUKxL (`r Td.report[Td.report$variable == 'Rest of UK deaths','Td.obs']` days; 95%CI: `r Td.report[Td.report$variable == 'Rest of UK deaths','ci.low']` – `r Td.report[Td.report$variable == 'Rest of UK deaths','ci.upp']` days).  
 &nbsp;
  
 &nbsp;
@@ -64,10 +64,10 @@ We compare the size and rate of increase of the COVID-19 epidemic for Scotland, 
 **Based on case counts** per 10,000 population available as of `r format(today, "%d/%m/%Y")`:  
 &nbsp;
  
-* The epidemic in Scotland is `r abs(Scotland_vs_London)` days `r text.Scotland_vs_London`  London and `r abs(Scotland_vs_rUKxL)` days `r text.Scotland_vs_rUKxL` of rUKxL (Figure 2, Figure 3).  
+* The epidemic in Scotland is `r abs(Scotland_vs_London.cases)` days `r text.Scotland_vs_London.cases`  London and `r abs(Scotland_vs_rUKxL.cases)` days `r text.Scotland_vs_rUKxL.cases` of rUKxL (Figure 2, Figure 3).  
 * The current 7-day doubling time in Scotland is `r Td.report[Td.report$variable == 'Scotland cases','Td.obs']` days (95%CI: `r Td.report[Td.report$variable == 'Scotland cases','ci.low']` - `r Td.report[Td.report$variable == 'Scotland cases','ci.upp']` days).  
-* This is significantly longer than the doubling time for the previous 7 days (`r Td.reportMINUS7[Td.reportMINUS7$variable == 'Scotland cases','Td.obs']` days; 95%CI: `r Td.reportMINUS7[Td.reportMINUS7$variable == 'Scotland cases','ci.low']` - `r Td.reportMINUS7[Td.reportMINUS7$variable == 'Scotland cases','ci.upp']` days).  
-* The current doubling time in Scotland is significantly shorter than London  (`r Td.report[Td.report$variable == 'London cases','Td.obs']` days, 95%CI: `r Td.report[Td.report$variable == 'London cases','ci.low']` - `r Td.report[Td.report$variable == 'London cases','ci.upp']` days) and is significantly longer than rUKxL (`r Td.report[Td.report$variable == 'Rest of UK cases','Td.obs']` days, 95%CI: `r Td.report[Td.report$variable == 'Rest of UK cases','ci.low']` - `r Td.report[Td.report$variable == 'Rest of UK cases','ci.upp']` days) over the same time period (Figure 2).  
+* This is **XXXXXX** than the doubling time for the previous 7 days (`r Td.reportMINUS7[Td.reportMINUS7$variable == 'Scotland cases','Td.obs']` days; 95%CI: `r Td.reportMINUS7[Td.reportMINUS7$variable == 'Scotland cases','ci.low']` - `r Td.reportMINUS7[Td.reportMINUS7$variable == 'Scotland cases','ci.upp']` days).  
+* The current doubling time in Scotland is **XXXXXX** than London  (`r Td.report[Td.report$variable == 'London cases','Td.obs']` days, 95%CI: `r Td.report[Td.report$variable == 'London cases','ci.low']` - `r Td.report[Td.report$variable == 'London cases','ci.upp']` days) and is **XXXXXX** than rUKxL (`r Td.report[Td.report$variable == 'Rest of UK cases','Td.obs']` days, 95%CI: `r Td.report[Td.report$variable == 'Rest of UK cases','ci.low']` - `r Td.report[Td.report$variable == 'Rest of UK cases','ci.upp']` days) over the same time period (Figure 2).  
 * Across Health Boards in Scotland there is variation in cumulative case incidence (`r formatC(round(min(tail(df.fig3b, 1)[,-1]), 1), digit = 1, format = 'f')` to `r formatC(round(max(tail(df.fig3b, 1)[,-1]), 1), digit = 1, format = 'f')` per 10,000 population, Figures 4, 5) and doubling time (`r min(Td.report[5:nrow(Td.report),'Td.obs'])` to `r max(Td.report[5:nrow(Td.report),'Td.obs'])` days, Table 1 and 2).  
   
 # Results
@@ -729,7 +729,7 @@ kable(Td.report.clean.for.output[,1:5])
 - Case counts for Scotland and for Scottish HBs from https://www.gov.scot/coronavirus-covid-19/ (accessed 1400 `r format(today, "%d/%m/%Y")`).  
 - Case counts for London and rUKxL from https://www.arcgis.com/apps/opsdashboard/index.html#/f94c3c90da5b4e9f9a0b19484dd4bb14 (accessed 2000 `r format(today, "%d/%m/%Y")`).  
 - Death count for London from https://www.england.nhs.uk/statistics/statistical-work-areas/covid-19-daily-deaths/  (accessed 1000 09/04/2020).  
-- Death count for UK from https://www.arcgis.com/apps/opsdashboard/index.html#/f94c3c90da5b4e9f9  a0b19484dd4bb14  (accessed 1000 09/04/2020).  
+- Death count for UK from https://www.arcgis.com/apps/opsdashboard/index.html#/f94c3c90da5b4e9f9  a0b19484dd4bb14  (accessed 1000 `r format(today, "%d/%m/%Y")`).  
 - Death count for Scotland from https://www.gov.scot/coronavirus-covid-19/ (accessed 1400 `r format(today, "%d/%m/%Y")`).  
 - Population counts from the Office of National Statistics (mid-year 2018).
     - UK:  https://www.ons.gov.uk/peoplepopulationandcommunity/populationandmigration/populationestimates/datasets/populationestimatesforukenglandandwalesscotlandandnorthernireland, Mid-2018, spreadsheet 'MYE2-all' (accessed 1140 26/03/20) 

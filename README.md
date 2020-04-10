@@ -4,25 +4,21 @@ This repository is for producing a report for Scotland covid19 doubling time rep
 
 
 
-UPDATE OF 09/04:
-1) No manual edit on Scotland data needed anymore, using Feifei's code
-2) Fetches data not from sheet index but from sheet names, respectively "Scotland Deaths" and "Scotland Cases" (so order and number of sheets do not matter anymore).
-3) Added heatmap of pairwise epidemic progression comparison as figure 7
-4) Fixed discrepancy between inset and legend numbers reported for figure 1 (deaths).
-
-
-
-
 1) OUTSTANDING WORK IN PROGRESS:
 
-	- pairwise heatmap of epidemic progression (by number of days ahead/behind) for each health board  --> see scratch code in ./archived_code/pariwise_heatmap
+	- Data: Gile is working on a way to centralise the data, however until then, data required for this report to run correctly must follow the same layout and naming conventions as they had so far. See the ./data/2020-04-08 directory for model.
+	- pairwise heatmap for UK regions but for deaths (now provided for cases) --> would be exactly the same code as the one now for producing figure 3 but starting from the deaths data instead of the cases data
+	- pairwise heatmap for health boards (for cases and for deaths)  --> see scratch code in ./archived_code/pariwise_heatmap. Pretty much done except must figure out why the HB do not display in the correct order.
+
 
 2) FILES
 
 ./data: one directory per day. Each contains:
-	- The UK data from that Feifei uploads on the dropbox everyday
+	- The UK data from that Feifei uploads on the dropbox everyday (UK_data_2020-MM-DD.xlsx)
 
-	- The excel spreadsheet associated with the daily report that Giles sends
+	- The excel spreadsheet associated with the daily report that Giles sends (SARS-Cov-2-Scotland_all_2020-MM-DD.xlsx)
+ 
+	- The UK data for deaths, as sent by Giles for the 09/04 report (UK_Regions_Deaths_2020-MM-DD)
 
 In current state of things, this excel file is fetched from the dropbox (https://www.dropbox.com/home/Africa%20data) where Feifei uploads it. See with Giles for username and password. However this is changing (Gile setting up a more centralised database solution)
 
@@ -83,7 +79,7 @@ data.cleaner()
 	- DO: applies neighbour points averaging to smooth over data when those have negative numbers of new cases/deaths reported (i.e. decreasing number of cumulative numbers)
 	- INPUT: a two columns dataframe where first col is date and second col is number of new reported cases/deaths. The variables MUST BE NAMED date and numNew Cases respectively.
 	- OUTPUT: a two columns dataframe (dates and number of new cases/deaths) where there will be less rows than originally, since some dates will have been removed, and replaced by a central date which averages over the two neighbourg dates. The variables remain named "date" and "numNewCases"
-	- NOTE: in script, the dataframe is passed through this function until all negative points have been smoothed over. In fact, passing the dataframe through data.cleaner() once is enough, but I had one case, with Camerron data, where we had in a row 0 and -2, therefore the point remained -1 even after applying the smoothing. The fix was to re-pass the output of data.cleaner() through data.cleaner() again. Do this procedure by default now in analysis script. Note, if data do not have any negative point in the first place, data.cleaner() will simply spit out a dataframe exactly as the original one.
+	- NOTE: in the **WHO script**, the dataframe is passed through this function until all negative points have been smoothed over. In fact, passing the dataframe through data.cleaner() once is enough, but I had one case, with Camerron data, where we had in a row 0 and -2, therefore the point remained -1 even after applying the smoothing. The fix was to re-pass the output of data.cleaner() through data.cleaner() again. Do this procedure by default now in analysis script. Note, if data do not have any negative point in the first place, data.cleaner() will simply spit out a dataframe exactly as the original one. **But in the Scotland report, the data do not have this issue, So I have not added this in the script. If issue ever happen, just add a while() loop which passes the dataframe in data.cleaner() until no negative point remain.**
 
 compute.td.m1.v2()
 	- DO: compute doubling time between two specified dates
