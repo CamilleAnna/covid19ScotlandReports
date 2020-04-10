@@ -10,10 +10,10 @@
 
 # SETUP ----
 
-setwd('/Users/s1687811/Documents/GitHub/covid19/AG_briefing/')
+setwd('/Users/s1687811/Documents/GitHub/covid19/')
 
-today<- Sys.Date() - 1
-its = 1000
+today<- Sys.Date() - 2
+its = 10
 set.seed(as.numeric(today))
 
 source('/Users/s1687811/Documents/GitHub/covid19/script/sourced_functions_doublingTime_reports.R') 
@@ -306,40 +306,6 @@ pairwise.comp.df$epidemic.diff.text<- formatC(pairwise.comp.df$epidemic.diff, di
 pairwise.comp.df$focal<- factor(pairwise.comp.df$focal, levels = rev(unique(as.character(pairwise.comp.df$focal))))
 pairwise.comp.df$versus<- factor(pairwise.comp.df$versus, levels = unique(as.character(pairwise.comp.df$versus)))
 
-# EPIDEMIC PROGRESSION -  SCOTTISH HB ----
-
-
-test.HB<- d.cases %>%
-  gather('Health_board', 'cumCases', 2:ncol(.)) %>%
-  left_join(pops.shb, by = 'Health_board') %>%
-  mutate(cumCases10k = cumCases * (10000/popsize)) %>%
-  select(-cumCases, -popsize) %>%
-  spread('Health_board', 'cumCases10k')
-
-
-# Do it for all pairwise comparison (could use it to make a heatmap..?)
-pairwise.comp.HB<- 
-  expand.grid(
-    data.frame(focal = colnames(test.HB)[-1],
-               versus = colnames(test.HB[-1]))
-  )
-pairwise.comp.HB$epidemic.diff<- NA
-pairwise.comp.HB$focal<- as.character(pairwise.comp.HB$focal)
-pairwise.comp.HB$versus<- as.character(pairwise.comp.HB$versus)
-for(i in 1:nrow(pairwise.comp.HB)){
-  
-  pairwise.comp.HB$epidemic.diff[i]<- epidemic.diff(test.HB, pairwise.comp.HB$focal[i], pairwise.comp.HB$versus[i])
-  
-}
-
-
-pairwise.comp.HB.df<-
-  pairwise.comp.HB[order(pairwise.comp.HB$epidemic.diff, na.last = TRUE, decreasing = TRUE), ]
-pairwise.comp.HB.df$epidemic.diff.text<- formatC(pairwise.comp.HB.df$epidemic.diff, digits = 1, format = "f")
-pairwise.comp.HB.df$focal<- factor(pairwise.comp.HB.df$focal, levels = rev(unique(as.character(pairwise.comp.HB.df$focal))))
-pairwise.comp.HB.df$versus<- factor(pairwise.comp.HB.df$versus, levels = unique(as.character(pairwise.comp.HB.df$versus)))
-#upper<- time.diff.df[-which(na.omit(time.diff.df$`Time difference (days)`) < 0),] # This is the dataframe used for the heatmap in final report
-
 
 
 
@@ -374,7 +340,6 @@ df.fig3b<-
 
 # Colorpalette for figures
 cbbPalette <- c("#000000", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7", 'red', 'green', 'gold', 'cyan')
-
 
 
 # RE-RUN ANALYSIS FOR THE PREVIOUS 7 DAYS, OUTPUT THE DOUBLING TIME TABLE ----
@@ -600,46 +565,4 @@ t1 = t1.define
 write.csv(Td.report.analyses, paste0('output/Td_report_', today, '_t1.', t1, '_t2.', t2, '.csv'))
 write.csv(Td.reportMINUS7, paste0('output/Td_report_', today, '_PREVIOUS_7_DAYS.csv'))
 save.image(paste0('output/AG_briefing_analysis_output_', today, '.RData'))
-
-# TO ADD ~~~~~~
-
-
-
-test.UKdeaths<- d.uk.deaths %>%
-  gather('region', 'cumDeaths', 2:ncol(.)) %>%
-  left_join(pops.uk, by = 'region') %>%
-  mutate(cumDeaths10k = cumDeaths * (10000/popsize)) %>%
-  select(-cumDeaths, -popsize) %>%
-  spread('region', 'cumDeaths10k')
-
-
-# Do it for all pairwise comparison (could use it to make a heatmap..?)
-pairwise.comp.deathUK<- 
-  expand.grid(
-    data.frame(focal = colnames(test.UKdeaths)[-1],
-               versus = colnames(test.UKdeaths[-1]))
-  )
-pairwise.comp.deathUK$epidemic.diff<- NA
-pairwise.comp.deathUK$focal<- as.character(pairwise.comp.deathUK$focal)
-pairwise.comp.deathUK$versus<- as.character(pairwise.comp.deathUK$versus)
-for(i in 1:nrow(pairwise.comp.deathUK)){
-  
-  pairwise.comp.deathUK$epidemic.diff[i]<- epidemic.diff(test.UKdeaths, pairwise.comp.deathUK$focal[i], pairwise.comp.deathUK$versus[i])
-  
-}
-
-
-pairwise.comp.deathUK.df<-
-  pairwise.comp.deathUK[order(pairwise.comp.deathUK$epidemic.diff, na.last = TRUE, decreasing = TRUE), ]
-pairwise.comp.deathUK.df$epidemic.diff.text<- formatC(pairwise.comp.deathUK.df$epidemic.diff, digits = 1, format = "f")
-pairwise.comp.deathUK.df$focal<- factor(pairwise.comp.deathUK.df$focal, levels = rev(unique(as.character(pairwise.comp.deathUK.df$focal))))
-pairwise.comp.deathUK.df$versus<- factor(pairwise.comp.deathUK.df$versus, levels = unique(as.character(pairwise.comp.deathUK.df$versus)))
-#upper<- time.diff.df[-which(na.omit(time.diff.df$`Time difference (days)`) < 0),] # This is the dataframe used for the heatmap in final report
-
-
-epidemic.diff(test.UKdeaths, 'Scotland', 'London')
-epidemic.diff(test.UKdeaths, 'Scotland', 'Rest of UK')
-epidemic.diff(test.UKdeaths, 'Rest of UK', 'London')
-
-
 
